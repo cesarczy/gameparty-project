@@ -178,7 +178,7 @@ export async function buildApp(config?: AppConfig): Promise<AppContainer> {
     solicitarRecuperacaoSenha: new SolicitarRecuperacaoSenhaUseCase(
       jogadorRepo,
       emailSender,
-      config.CORS_ORIGIN,
+      cfg.CORS_ORIGIN,
     ),
     redefinirSenha: new RedefinirSenhaUseCase(jogadorRepo, passwordHasher),
     jwt,
