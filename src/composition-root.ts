@@ -82,6 +82,8 @@ import { SairDaSalaUseCase } from '@live-rooms/application/use-cases/sair-da-sal
 import { EnviarMensagemUseCase } from '@live-rooms/application/use-cases/enviar-mensagem.use-case.js';
 import { ObterSalaUseCase } from '@live-rooms/application/use-cases/obter-sala.use-case.js';
 import { ListarMensagensSalaUseCase } from '@live-rooms/application/use-cases/listar-mensagens-sala.use-case.js';
+import { PurgeOldRoomMessagesUseCase } from '@live-rooms/application/use-cases/purge-old-room-messages.use-case.js';
+import { scheduleRoomMessageRetention } from '@live-rooms/infrastructure/scheduling/room-message-retention.scheduler.js';
 import { registerLiveRoomsRoutes } from '@live-rooms/presentation/http/live-rooms.routes.js';
 import { VerificarEmailUseCase } from '@identity/application/use-cases/verificar-email.use-case.js';
 import { SolicitarRecuperacaoSenhaUseCase } from '@identity/application/use-cases/solicitar-recuperacao-senha.use-case.js';
@@ -102,6 +104,7 @@ export interface AppContainer {
   app: ReturnType<typeof Fastify>;
   prisma: ReturnType<typeof getPrismaClient>;
   chatHub: ChatRoomHub;
+  purgeOldRoomMessages: PurgeOldRoomMessagesUseCase;
 }
 
 export async function buildApp(config?: AppConfig): Promise<AppContainer> {
@@ -269,15 +272,23 @@ export async function buildApp(config?: AppConfig): Promise<AppContainer> {
     chatHub,
   });
 
-  return { app, prisma, chatHub };
+  const purgeOldRoomMessages = new PurgeOldRoomMessagesUseCase(mensagemRepo);
+
+  return { app, prisma, chatHub, purgeOldRoomMessages };
 }
 
 export async function startServer(config?: AppConfig) {
   const cfg = config ?? loadConfig();
-  const { app } = await buildApp(cfg);
+  const { app, purgeOldRoomMessages } = await buildApp(cfg);
+
+  const retentionSchedule = scheduleRoomMessageRetention(app.log, purgeOldRoomMessages, {
+    retentionDays: cfg.ROOM_MESSAGE_RETENTION_DAYS,
+    intervalHours: cfg.MESSAGE_PURGE_INTERVAL_HOURS,
+  });
 
   const shutdown = async (signal: string) => {
     app.log.info({ signal }, 'Encerrando servidor');
+    retentionSchedule?.stop();
     await app.close();
     await disconnectPrisma();
     process.exit(0);

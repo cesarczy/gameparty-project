@@ -59,6 +59,10 @@ class InMemoryMensagemRepository implements MensagemRepository {
   async listRecentByRoom(_roomId: string) {
     return [];
   }
+
+  async deleteSentBefore(_cutoff: Date): Promise<number> {
+    return 0;
+  }
 }
 
 describe('Live-rooms use cases', () => {

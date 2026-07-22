@@ -30,4 +30,11 @@ export class PrismaMensagemRepository implements MensagemRepository {
       sentAt: row.sentAt.toISOString(),
     }));
   }
+
+  async deleteSentBefore(cutoff: Date): Promise<number> {
+    const result = await this.prisma.mensagem.deleteMany({
+      where: { sentAt: { lt: cutoff } },
+    });
+    return result.count;
+  }
 }

@@ -72,6 +72,8 @@ Todas executadas na entrega MVP base:
 | OAuth Steam/Discord | Não implementado |
 | SMTP / deploy produção | Pendente |
 | Redis para fan-out WS multi-instância | Hub in-memory (single node) |
+| Retenção automática mensagens de sala | ✅ 90 dias (configurável via env) |
+| Retenção mensagens privadas | Pendente |
 | Testes E2E com PostgreSQL real | Opcional via `DATABASE_URL` |
 
 ## Métricas de qualidade

@@ -451,7 +451,7 @@ export function AdminPage() {
                           <td>{new Date(player.createdAt).toLocaleDateString('pt-BR')}</td>
                           <td>
                             {player.isPrimaryAdmin ? (
-                              <span className="muted small">Protegido</span>
+                              <span className="muted small"></span>
                             ) : (
                               <div className="admin-row-actions">
                                 <Button variant="ghost" className="btn-sm" onClick={() => setEditPlayerId(player.playerId)}>

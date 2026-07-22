@@ -29,4 +29,5 @@ export interface MensagemRepository {
       sentAt: string;
     }>
   >;
+  deleteSentBefore(cutoff: Date): Promise<number>;
 }
