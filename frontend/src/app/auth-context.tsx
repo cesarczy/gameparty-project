@@ -121,7 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (partial.displayName !== undefined) {
         setDisplayName(partial.displayName);
-        localStorage.setItem('gameparty_display_name', partial.displayName);
+        if (partial.displayName) localStorage.setItem('gameparty_display_name', partial.displayName);
+        else localStorage.removeItem('gameparty_display_name');
       }
       if (partial.avatarUrl !== undefined) {
         setAvatarUrl(partial.avatarUrl);
@@ -130,7 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (partial.role !== undefined) {
         setRole(partial.role);
-        localStorage.setItem('gameparty_role', partial.role);
+        if (partial.role) localStorage.setItem('gameparty_role', partial.role);
+        else localStorage.removeItem('gameparty_role');
       }
     },
     [],

@@ -436,7 +436,7 @@ export function AdminPage() {
                           </td>
                           <td>
                             {player.isBanned ? (
-                              <RankBadge rank={{ id: 'banido', label: 'Banido', badge: '🚫', minDays: 0 }} />
+                              <RankBadge rank={{ id: 'banido', label: 'Banido', badge: '🚫', badgeImageUrl: null }} />
                             ) : player.rank ? (
                               <RankBadge rank={player.rank} showLabel={false} />
                             ) : (

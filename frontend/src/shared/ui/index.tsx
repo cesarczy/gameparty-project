@@ -17,8 +17,20 @@ export function Button({ variant = 'primary', className = '', ...props }: Button
   return <button className={`${base} ${styles} ${className}`} {...props} />;
 }
 
-export function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <div className={`card ${className}`}>{children}</div>;
+export function Card({
+  children,
+  className = '',
+  id,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
+}) {
+  return (
+    <div id={id} className={`card ${className}`}>
+      {children}
+    </div>
+  );
 }
 
 export function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
