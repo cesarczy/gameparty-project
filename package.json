@@ -19,7 +19,10 @@
     "docker:down": "./docker/dev.sh down",
     "docker:logs": "./docker/dev.sh logs",
     "docker:test": "./docker/dev.sh test",
-    "docker:reset": "./docker/dev.sh reset"
+    "docker:reset": "./docker/dev.sh reset",
+    "docker:prod:up": "./docker/prod.sh up",
+    "docker:prod:down": "./docker/prod.sh down",
+    "docker:prod:logs": "./docker/prod.sh logs"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",

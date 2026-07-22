@@ -1,0 +1,76 @@
+# GameParty — produção (VPS)
+# Uso: cp .env.production.example .env && ./docker/prod.sh up
+
+name: gameparty-prod
+
+services:
+  db:
+    image: docker.io/library/postgres:16-alpine
+    container_name: gameparty-prod-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gameparty}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: ${POSTGRES_DB:-gameparty}
+    volumes:
+      - gameparty_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gameparty} -d ${POSTGRES_DB:-gameparty}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api.prod
+    container_name: gameparty-prod-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-gameparty}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-gameparty}?schema=public
+      JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no .env (mín. 16 caracteres)}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      PORT: "3000"
+      HOST: 0.0.0.0
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://gameparty.com.br}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      ROOM_MESSAGE_RETENTION_DAYS: ${ROOM_MESSAGE_RETENTION_DAYS:-90}
+      MESSAGE_PURGE_INTERVAL_HOURS: ${MESSAGE_PURGE_INTERVAL_HOURS:-24}
+      RUN_SEED: ${RUN_SEED:-false}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@gameparty.com.br}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    volumes:
+      - gameparty_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  nginx:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend.prod
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    container_name: gameparty-prod-nginx
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - certbot_www:/var/www/certbot:ro
+    depends_on:
+      - api
+    networks:
+      - internal
+
+volumes:
+  gameparty_pgdata:
+  gameparty_uploads:
+  certbot_www:
+
+networks:
+  internal:
+    driver: bridge

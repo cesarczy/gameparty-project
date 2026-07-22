@@ -60,6 +60,19 @@ Mais detalhes: [`docs/docker.md`](docs/docker.md)
 
 ---
 
+## Produção (VPS)
+
+```bash
+cp .env.production.example .env   # editar senhas e domínio
+chmod +x docker/prod.sh
+./docker/prod.sh up
+```
+
+Sobe **Nginx + API + PostgreSQL** (sem Vite dev, sem specs/harness).  
+Guia completo: [`docs/deploy-vps.md`](docs/deploy-vps.md)
+
+---
+
 ### Variáveis de ambiente
 
 | Arquivo | Propósito |

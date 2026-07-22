@@ -8,13 +8,32 @@ frontend/dist/
 coverage/
 .prisma/
 
-# Environment (use docker-compose env or copie .env.example)
+# Environment
 .env
 .env.local
+.env.production
+
+# Dev / docs / kit DDD (não entram na imagem de produção)
+docs/
+specs/
+prompts/
+harness/
+tests/
+references/
+templates/
+.cursor/
+.git/
+.github/
+*.md
+!README.md
 
 # Logs & OS
 *.log
 .DS_Store
 
-# Books (large binaries — keep external)
+# Books (large binaries)
 references/books/
+
+# Uploads locais (produção usa volume Docker)
+uploads/*
+!uploads/.gitkeep
