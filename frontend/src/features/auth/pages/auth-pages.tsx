@@ -283,7 +283,7 @@ export function LoginPage() {
         </div>
         <h1 style={{ textAlign: 'center' }}>Entrar</h1>
    
-        <p className="muted">Encontre companhia para jogar online ou campanha.</p>
+        <p className="muted" style={{ textAlign: 'center' }}>Encontre companhia para jogar online ou campanha.</p>
         <form onSubmit={handleSubmit} className="stack">
           <div>
             <Label htmlFor="email">E-mail</Label>
