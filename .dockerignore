@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build / cache
+dist/
+frontend/dist/
+coverage/
+.prisma/
+
+# Environment (use docker-compose env or copie .env.example)
+.env
+.env.local
+
+# Logs & OS
+*.log
+.DS_Store
+
+# Books (large binaries — keep external)
+references/books/

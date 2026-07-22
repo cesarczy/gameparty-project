@@ -1,0 +1,41 @@
+# Harness configuration
+
+checks:
+  layer_dependencies:
+    enabled: true
+    description: Domain must not import infrastructure/framework packages
+
+  forbidden_imports_in_domain:
+    enabled: true
+    patterns:
+      - "@prisma/client"
+      - "express"
+      - "fastify"
+      - "react"
+      - "next"
+
+  required_structure:
+    enabled: true
+    paths:
+      - src/
+      - specs/
+      - .cursor/rules/
+
+  prisma_isolation:
+    enabled: true
+    allowed_paths:
+      - prisma/
+      - "**/infrastructure/**"
+
+  spec_completeness:
+    enabled: true
+    expected_specs: 12
+
+  naming_conventions:
+    enabled: true
+    use_case_suffix: ".use-case.ts"
+    value_object_suffix: ".vo.ts"
+
+report:
+  format: text
+  fail_fast: false

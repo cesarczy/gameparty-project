@@ -1,0 +1,339 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GameMode {
+  ONLINE
+  CAMPANHA
+}
+
+enum RoomStatus {
+  ABERTA
+  CHEIA
+  ENCERRADA
+}
+
+enum PlayerRole {
+  PLAYER
+  ADMIN
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+}
+
+enum ReportReason {
+  SPAM
+  TOXICIDADE
+  OFENSA
+  ASSEDIO
+  HACK
+  FAKE
+  OUTRO
+}
+
+enum ReportStatus {
+  ABERTA
+  ANALISANDO
+  RESOLVIDA
+  REJEITADA
+}
+
+enum NotificationType {
+  AMIZADE
+  MENSAGEM
+  CONVITE
+  DENUNCIA
+}
+
+// --- Identidade ---
+
+model Jogador {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  email        String   @unique
+  displayName  String   @map("display_name")
+  fullName     String?  @map("full_name")
+  senhaHash    String?  @map("senha_hash")
+  googleId     String?    @unique @map("google_id")
+  avatarUrl    String?    @map("avatar_url")
+  role         PlayerRole @default(PLAYER)
+  displayNameChangedAt DateTime @default(now()) @map("display_name_changed_at")
+  emailChangedAt       DateTime @default(now()) @map("email_changed_at")
+  profanityFilterEnabled Boolean @default(true) @map("profanity_filter_enabled")
+  chatOnline           Boolean  @default(true) @map("chat_online")
+  theme                String   @default("dark")
+  language             String   @default("pt-BR")
+  country              String?
+  birthDate            DateTime? @map("birth_date")
+  termsAcceptedAt      DateTime? @map("terms_accepted_at")
+  emailVerified        Boolean  @default(false) @map("email_verified")
+  emailVerificationToken String? @map("email_verification_token")
+  passwordResetToken     String? @map("password_reset_token")
+  passwordResetExpiresAt DateTime? @map("password_reset_expires_at")
+  bannedAt               DateTime? @map("banned_at")
+  rankId                 String?   @map("rank_id")
+  lastSeenAt           DateTime? @map("last_seen_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  favoritos    JogadorFavorito[]
+  salasCriadas Sala[]            @relation("SalaCreator")
+  participacoes SalaParticipante[]
+  mensagens    Mensagem[]
+  amizadesEnviadas   JogadorAmizade[] @relation("AmizadeRequester")
+  amizadesRecebidas  JogadorAmizade[] @relation("AmizadeAddressee")
+  bloqueiosFeitos    JogadorBloqueio[] @relation("Bloqueador")
+  bloqueiosRecebidos JogadorBloqueio[] @relation("Bloqueado")
+  denunciasFeitas    Denuncia[] @relation("Denunciante")
+  denunciasRecebidas Denuncia[] @relation("Denunciado")
+  notificacoes       Notificacao[]
+  mensagensEnviadas  MensagemPrivada[] @relation("Remetente")
+  mensagensRecebidas MensagemPrivada[] @relation("Destinatario")
+  atividadesSujeito  RegistroAtividade[] @relation("ActivitySubject")
+  atividadesAutor    RegistroAtividade[] @relation("ActivityActor")
+
+  @@map("jogadores")
+}
+
+model JogadorFavorito {
+  jogadorId String  @map("jogador_id")
+  jogoId    String  @map("jogo_id")
+  jogador   Jogador @relation(fields: [jogadorId], references: [id], onDelete: Cascade)
+  jogo      Jogo    @relation(fields: [jogoId], references: [id], onDelete: Cascade)
+
+  @@id([jogadorId, jogoId])
+  @@map("jogador_favoritos")
+}
+
+model JogadorAmizade {
+  requesterId String       @map("requester_id")
+  addresseeId String       @map("addressee_id")
+  status      FriendStatus @default(PENDING)
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  requester Jogador @relation("AmizadeRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee Jogador @relation("AmizadeAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@id([requesterId, addresseeId])
+  @@map("jogador_amizades")
+}
+
+model JogadorBloqueio {
+  blockerId String   @map("blocker_id")
+  blockedId String   @map("blocked_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blocker Jogador @relation("Bloqueador", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked Jogador @relation("Bloqueado", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@map("jogador_bloqueios")
+}
+
+model Denuncia {
+  id         String       @id @default(uuid())
+  reporterId String       @map("reporter_id")
+  reportedId String       @map("reported_id")
+  reason     ReportReason
+  details    String?
+  status     ReportStatus @default(ABERTA)
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  reporter Jogador @relation("Denunciante", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported Jogador @relation("Denunciado", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("denuncias")
+}
+
+model Notificacao {
+  id        String           @id @default(uuid())
+  jogadorId String           @map("jogador_id")
+  type      NotificationType
+  title     String
+  body      String
+  payload   Json?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  jogador Jogador @relation(fields: [jogadorId], references: [id], onDelete: Cascade)
+
+  @@index([jogadorId, read])
+  @@map("notificacoes")
+}
+
+model MensagemPrivada {
+  id         String    @id @default(uuid())
+  senderId   String    @map("sender_id")
+  receiverId String    @map("receiver_id")
+  content    String
+  sentAt     DateTime  @default(now()) @map("sent_at")
+  readAt     DateTime? @map("read_at")
+
+  sender   Jogador @relation("Remetente", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver Jogador @relation("Destinatario", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, receiverId, sentAt])
+  @@index([receiverId, readAt])
+  @@map("mensagens_privadas")
+}
+
+enum ActivityLogCategory {
+  AUTH
+  PROFILE
+  ADMIN
+  SECURITY
+}
+
+enum ActivityLogType {
+  LOGIN
+  LOGOUT
+  LOGIN_FAILED
+  PASSWORD_CHANGED
+  PASSWORD_RECOVERY
+  EMAIL_VERIFIED
+  DISPLAY_NAME_CHANGED
+  AVATAR_CHANGED
+  FAVORITES_CHANGED
+  USER_BANNED
+  ADMIN_USER_BANNED
+  ADMIN_USER_UNBANNED
+  ADMIN_ROLE_CHANGED
+  ADMIN_REPORT_RECEIVED
+  ADMIN_PLAYER_UPDATED
+  EMAIL_CHANGED
+  PERMISSIONS_CHANGED
+  NEW_DEVICE_LOGIN
+  MANY_LOGIN_ATTEMPTS
+  SESSION_ENDED
+  GAME_DEACTIVATED
+  GAME_ACTIVATED
+  CATEGORY_DEACTIVATED
+  CATEGORY_ACTIVATED
+}
+
+model RegistroAtividade {
+  id         String              @id @default(uuid())
+  category   ActivityLogCategory
+  type       ActivityLogType
+  message    String
+  subjectId  String?             @map("subject_id")
+  actorId    String?             @map("actor_id")
+  actorName  String?             @map("actor_name")
+  metadata   Json?
+  createdAt  DateTime            @default(now()) @map("created_at")
+
+  subject Jogador? @relation("ActivitySubject", fields: [subjectId], references: [id], onDelete: SetNull)
+  actor   Jogador? @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([subjectId, createdAt])
+  @@index([category, createdAt])
+  @@map("registros_atividade")
+}
+
+// --- Catálogo ---
+
+model Categoria {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  jogos JogoCategoria[]
+
+  @@map("categorias")
+}
+
+model Jogo {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  supportedModes JogoModo[]
+  categorias     JogoCategoria[]
+  favoritos      JogadorFavorito[]
+  salas          Sala[]
+
+  @@map("jogos")
+}
+
+model JogoModo {
+  jogoId String   @map("jogo_id")
+  mode   GameMode
+  jogo   Jogo     @relation(fields: [jogoId], references: [id], onDelete: Cascade)
+
+  @@id([jogoId, mode])
+  @@map("jogo_modos")
+}
+
+model JogoCategoria {
+  jogoId      String    @map("jogo_id")
+  categoriaId String    @map("categoria_id")
+  jogo        Jogo      @relation(fields: [jogoId], references: [id], onDelete: Cascade)
+  categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  @@id([jogoId, categoriaId])
+  @@index([categoriaId])
+  @@map("jogo_categorias")
+}
+
+// --- Salas ao Vivo ---
+
+model Sala {
+  id        String     @id @default(uuid())
+  jogoId    String     @unique @map("jogo_id")
+  creatorId String     @map("creator_id")
+  title     String
+  mode      GameMode
+  capacity  Int
+  isFixed   Boolean    @default(true) @map("is_fixed")
+  status    RoomStatus @default(ABERTA)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  jogo          Jogo               @relation(fields: [jogoId], references: [id])
+  creator       Jogador            @relation("SalaCreator", fields: [creatorId], references: [id])
+  participantes SalaParticipante[]
+  mensagens     Mensagem[]
+
+  @@index([jogoId, status])
+  @@index([status])
+  @@map("salas")
+}
+
+model SalaParticipante {
+  salaId    String   @map("sala_id")
+  jogadorId String   @map("jogador_id")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  sala    Sala    @relation(fields: [salaId], references: [id], onDelete: Cascade)
+  jogador Jogador @relation(fields: [jogadorId], references: [id], onDelete: Cascade)
+
+  @@id([salaId, jogadorId])
+  @@map("sala_participantes")
+}
+
+model Mensagem {
+  id        String   @id @default(uuid())
+  salaId    String   @map("sala_id")
+  authorId  String   @map("author_id")
+  content   String
+  sentAt    DateTime @default(now()) @map("sent_at")
+
+  sala   Sala    @relation(fields: [salaId], references: [id], onDelete: Cascade)
+  author Jogador @relation(fields: [authorId], references: [id])
+
+  @@index([salaId, sentAt])
+  @@map("mensagens")
+}

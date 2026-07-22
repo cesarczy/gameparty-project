@@ -1,0 +1,78 @@
+# GameParty — desenvolvimento containerizado
+# Fedora: podman-compose (rootless) — ./docker/dev.sh up
+
+name: gameparty
+
+services:
+  db:
+    image: docker.io/library/postgres:16-alpine
+    container_name: gameparty-db
+    environment:
+      POSTGRES_USER: gameparty
+      POSTGRES_PASSWORD: gameparty
+      POSTGRES_DB: gameparty
+    volumes:
+      - gameparty_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gameparty -d gameparty"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: gameparty-api
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        npm install
+        npx prisma generate
+        npx prisma migrate deploy
+        npx tsx prisma/seed.ts || true
+        exec npm run dev
+    environment:
+      DATABASE_URL: postgresql://gameparty:gameparty@db:5432/gameparty?schema=public
+      JWT_SECRET: dev-secret-min-16-chars-change-in-prod
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      PORT: "3000"
+      HOST: 0.0.0.0
+      CORS_ORIGIN: http://localhost:5173
+      LOG_LEVEL: info
+    volumes:
+      - .:/app:Z
+      - api_node_modules:/app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: gameparty-frontend
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        npm install
+        exec npm run dev -- --host 0.0.0.0 --port 5173
+    environment:
+      VITE_API_PROXY: http://api:3000
+      VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    volumes:
+      - ./frontend:/app:Z
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+volumes:
+  gameparty_pgdata:
+  api_node_modules:
+  frontend_node_modules:

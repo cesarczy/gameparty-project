@@ -1,0 +1,1 @@
+ALTER TABLE "jogadores" ADD COLUMN IF NOT EXISTS "rank_id" TEXT;
