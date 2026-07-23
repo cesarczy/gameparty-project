@@ -52,8 +52,6 @@ enum NotificationType {
   DENUNCIA
 }
 
-// --- Identidade ---
-
 model Jogador {
   id           String   @id @default(uuid())
   username     String   @unique
@@ -238,8 +236,6 @@ model RegistroAtividade {
   @@map("registros_atividade")
 }
 
-// --- Catálogo ---
-
 model Categoria {
   id        String   @id @default(uuid())
   name      String
@@ -287,8 +283,6 @@ model JogoCategoria {
   @@index([categoriaId])
   @@map("jogo_categorias")
 }
-
-// --- Salas ao Vivo ---
 
 model Sala {
   id        String     @id @default(uuid())

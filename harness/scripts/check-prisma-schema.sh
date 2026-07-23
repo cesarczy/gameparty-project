@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Prisma client só em infrastructure
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -11,7 +10,6 @@ fi
 
 VIOLATIONS=0
 
-# Find prisma imports outside infrastructure and prisma/
 while IFS= read -r file; do
   if echo "$file" | grep -qE 'infrastructure|/prisma/'; then
     continue
@@ -23,7 +21,6 @@ while IFS= read -r file; do
   VIOLATIONS=$((VIOLATIONS + 1))
 done < <(rg -l '@prisma/client' "$ROOT/src" --glob '*.ts' 2>/dev/null || true)
 
-# Validate schema if present
 if [ -f "$ROOT/prisma/schema.prisma" ]; then
   if command -v npx &>/dev/null && [ -f "$ROOT/package.json" ]; then
     (cd "$ROOT" && npx prisma validate 2>/dev/null) && echo "  prisma validate OK" || {

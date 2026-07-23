@@ -1,4 +1,3 @@
-/** Steam App ID → URL da capsule (horizontal, ideal para cards) */
 const STEAM_APP_IDS: Record<string, number> = {
   'dota-2': 570,
   'smite-2': 2430400,
@@ -122,7 +121,6 @@ const STEAM_APP_IDS: Record<string, number> = {
   'call-of-duty-black-ops-6': 2933620,
 };
 
-/** Capas externas para jogos fora da Steam ou sem App ID mapeado */
 const CUSTOM_COVER_URLS: Record<string, string> = {
   'league-of-legends':
     'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Ahri_0.jpg',

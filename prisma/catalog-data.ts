@@ -1,5 +1,3 @@
-/** Catálogo GameParty — categorias e jogos com salas fixas */
-
 export function slugify(name: string): string {
   return name
     .normalize('NFD')
@@ -30,9 +28,7 @@ export const CATEGORIES = [
   { name: 'Outros', slug: 'outros' },
 ] as const;
 
-/** name → category slugs (jogo pode estar em várias categorias) */
 export const GAMES: Array<{ name: string; categories: string[] }> = [
-  // MOBA
   { name: 'League of Legends', categories: ['moba'] },
   { name: 'Dota 2', categories: ['moba'] },
   { name: 'Smite 2', categories: ['moba'] },
@@ -41,7 +37,6 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: 'Honor of Kings', categories: ['moba'] },
   { name: 'Arena of Valor', categories: ['moba'] },
   { name: 'Mobile Legends: Bang Bang', categories: ['moba'] },
-  // FPS
   { name: 'Counter-Strike 2', categories: ['fps'] },
   { name: 'Valorant', categories: ['fps'] },
   { name: 'Call of Duty: Black Ops 6', categories: ['fps'] },
@@ -52,7 +47,6 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: 'Overwatch 2', categories: ['fps'] },
   { name: 'Halo Infinite', categories: ['fps'] },
   { name: 'Escape from Tarkov', categories: ['fps'] },
-  // MMORPG
   { name: 'World of Warcraft', categories: ['mmorpg'] },
   { name: 'Final Fantasy XIV', categories: ['mmorpg'] },
   { name: 'Guild Wars 2', categories: ['mmorpg'] },
@@ -68,7 +62,6 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: 'Tibia', categories: ['mmorpg'] },
   { name: 'Ragnarok Online', categories: ['mmorpg'] },
   { name: 'MapleStory', categories: ['mmorpg'] },
-  // Battle Royale
   { name: 'Fortnite', categories: ['battle-royale'] },
   { name: 'PUBG: Battlegrounds', categories: ['battle-royale'] },
   { name: 'Apex Legends', categories: ['battle-royale'] },
@@ -76,7 +69,6 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: 'Naraka: Bladepoint', categories: ['battle-royale'] },
   { name: 'Super People', categories: ['battle-royale'] },
   { name: 'Fall Guys', categories: ['battle-royale', 'coop-party'] },
-  // Estratégia RTS
   { name: 'Age of Empires II', categories: ['estrategia-rts'] },
   { name: 'Age of Empires IV', categories: ['estrategia-rts'] },
   { name: 'StarCraft II', categories: ['estrategia-rts'] },
@@ -84,7 +76,6 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: 'Command & Conquer: Red Alert 2', categories: ['estrategia-rts'] },
   { name: 'Company of Heroes 3', categories: ['estrategia-rts'] },
   { name: 'Age of Mythology: Retold', categories: ['estrategia-rts'] },
-  // Estratégia por Turnos
   { name: 'Civilization VII', categories: ['estrategia-turnos'] },
   { name: 'Civilization VI', categories: ['estrategia-turnos'] },
   { name: 'Total War: Warhammer III', categories: ['estrategia-turnos'] },
@@ -92,7 +83,6 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: 'Crusader Kings III', categories: ['estrategia-turnos'] },
   { name: 'Hearts of Iron IV', categories: ['estrategia-turnos'] },
   { name: 'XCOM 2', categories: ['estrategia-turnos'] },
-  // Luta
   { name: 'Street Fighter 6', categories: ['luta'] },
   { name: 'Tekken 8', categories: ['luta'] },
   { name: 'Mortal Kombat 1', categories: ['luta'] },
@@ -103,7 +93,6 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: 'The King of Fighters XV', categories: ['luta'] },
   { name: 'Brawlhalla', categories: ['luta'] },
   { name: 'MultiVersus', categories: ['luta'] },
-  // Puzzle
   { name: 'Tetris', categories: ['puzzle'] },
   { name: 'Tetris Effect: Connected', categories: ['puzzle'] },
   { name: 'Portal 2', categories: ['puzzle'] },
@@ -114,7 +103,6 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: 'Limbo', categories: ['puzzle'] },
   { name: 'Inside', categories: ['puzzle'] },
   { name: 'World of Goo', categories: ['puzzle'] },
-  // Survival
   { name: 'Rust', categories: ['survival'] },
   { name: 'ARK: Survival Ascended', categories: ['survival'] },
   { name: 'DayZ', categories: ['survival'] },
@@ -125,14 +113,12 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: "Don't Starve Together", categories: ['survival'] },
   { name: 'V Rising', categories: ['survival'] },
   { name: 'Subnautica', categories: ['survival'] },
-  // Sandbox
   { name: 'Minecraft', categories: ['sandbox'] },
   { name: 'Terraria', categories: ['sandbox'] },
   { name: 'Roblox', categories: ['sandbox'] },
   { name: "Garry's Mod", categories: ['sandbox'] },
   { name: 'Core Keeper', categories: ['sandbox'] },
   { name: 'Starbound', categories: ['sandbox'] },
-  // Corrida
   { name: 'Forza Horizon 5', categories: ['corrida'] },
   { name: 'Gran Turismo 7', categories: ['corrida'] },
   { name: 'Need for Speed Unbound', categories: ['corrida'] },
@@ -140,21 +126,18 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: 'iRacing', categories: ['corrida'] },
   { name: 'F1 25', categories: ['corrida'] },
   { name: 'Mario Kart 8 Deluxe', categories: ['corrida'] },
-  // Esportes
   { name: 'EA Sports FC 26', categories: ['esportes'] },
   { name: 'eFootball', categories: ['esportes'] },
   { name: 'NBA 2K26', categories: ['esportes'] },
   { name: 'MLB The Show', categories: ['esportes'] },
   { name: 'Rocket League', categories: ['esportes'] },
   { name: 'PGA Tour 2K', categories: ['esportes'] },
-  // Hack and Slash
   { name: 'Diablo IV', categories: ['hack-and-slash'] },
   { name: 'Path of Exile', categories: ['hack-and-slash'] },
   { name: 'Path of Exile 2', categories: ['hack-and-slash'] },
   { name: 'Last Epoch', categories: ['hack-and-slash'] },
   { name: 'Grim Dawn', categories: ['hack-and-slash'] },
   { name: 'Torchlight II', categories: ['hack-and-slash'] },
-  // Roguelike
   { name: 'Hades', categories: ['roguelike'] },
   { name: 'Dead Cells', categories: ['roguelike'] },
   { name: 'The Binding of Isaac: Rebirth', categories: ['roguelike'] },
@@ -162,21 +145,18 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: 'Vampire Survivors', categories: ['roguelike'] },
   { name: 'Slay the Spire', categories: ['roguelike'] },
   { name: 'Enter the Gungeon', categories: ['roguelike'] },
-  // Plataforma
   { name: 'Hollow Knight', categories: ['plataforma'] },
   { name: 'Celeste', categories: ['plataforma'] },
   { name: 'Ori and the Will of the Wisps', categories: ['plataforma'] },
   { name: 'Super Mario Bros. Wonder', categories: ['plataforma'] },
   { name: 'Cuphead', categories: ['plataforma'] },
   { name: 'Rayman Legends', categories: ['plataforma'] },
-  // Terror
   { name: 'Phasmophobia', categories: ['terror'] },
   { name: 'Dead by Daylight', categories: ['terror'] },
   { name: 'Outlast', categories: ['terror'] },
   { name: 'Resident Evil Village', categories: ['terror'] },
   { name: 'Silent Hill 2', categories: ['terror'] },
   { name: 'Alien: Isolation', categories: ['terror'] },
-  // Coop / Party
   { name: 'It Takes Two', categories: ['coop-party'] },
   { name: 'Overcooked! 2', categories: ['coop-party'] },
   { name: 'Lethal Company', categories: ['coop-party'] },
@@ -184,7 +164,6 @@ export const GAMES: Array<{ name: string; categories: string[] }> = [
   { name: 'Party Animals', categories: ['coop-party'] },
   { name: 'Human: Fall Flat', categories: ['coop-party'] },
   { name: 'Pico Park', categories: ['coop-party'] },
-  // Outros
   { name: 'Jogo não listado', categories: ['outros'] },
 ];
 

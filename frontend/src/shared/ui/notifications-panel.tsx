@@ -62,7 +62,6 @@ export function NotificationsPanel({ variant = 'sidebar' }: NotificationsPanelPr
       const res = await api.listNotifications();
       setNotifications(res.notifications);
     } catch {
-      /* ignore when offline */
     } finally {
       setLoading(false);
     }

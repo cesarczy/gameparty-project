@@ -1,5 +1,3 @@
-# Harness configuration
-
 checks:
   layer_dependencies:
     enabled: true

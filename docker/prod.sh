@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# GameParty — produção (VPS)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

@@ -14,5 +14,4 @@ COPY . .
 
 EXPOSE 3000
 
-# Comando definido no docker-compose (evita SELinux bloquear scripts montados)
 CMD ["npm", "run", "dev"]

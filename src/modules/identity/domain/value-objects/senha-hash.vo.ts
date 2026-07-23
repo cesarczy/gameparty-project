@@ -18,7 +18,6 @@ export class SenhaHash {
         `Senha deve ter no mínimo ${MIN_PASSWORD_LENGTH} caracteres`,
       );
     }
-    // Hash real será aplicado na infraestrutura; domínio valida requisito mínimo
     return new SenhaHash(`pending-hash:${plaintext}`);
   }
 

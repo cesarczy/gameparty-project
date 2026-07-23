@@ -9,7 +9,6 @@ export const PLAYER_RANK_OPTIONS: PlayerRank[] = [
   { id: 'mestre', label: 'Mestre', badge: '💎', badgeImageUrl: null, minDays: 730 },
 ];
 
-/** Exclusivo do @admin — não aparece na lista manual do painel. */
 export const PRIMARY_ADMIN_RANK_OPTION: PlayerRank = {
   id: 'satoru-gojo',
   label: 'Satoru Gojo',

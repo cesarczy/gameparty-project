@@ -16,7 +16,6 @@ export class DisplayName {
     return new DisplayName(trimmed);
   }
 
-  /** Chave normalizada para verificação de unicidade (case-insensitive). */
   static normalizeKey(raw: string): string {
     return raw.trim().toLowerCase();
   }

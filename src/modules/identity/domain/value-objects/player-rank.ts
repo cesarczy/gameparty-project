@@ -16,7 +16,6 @@ export const BANNED_RANK: PlayerRank = {
   minDays: 0,
 };
 
-/** Insígnia exclusiva do administrador principal (@admin). */
 export const PRIMARY_ADMIN_RANK: PlayerRank = {
   id: 'satoru-gojo',
   label: 'Satoru Gojo',
@@ -25,7 +24,6 @@ export const PRIMARY_ADMIN_RANK: PlayerRank = {
   minDays: 0,
 };
 
-/** Nível manual ou automático para demais contas ADMIN. */
 export const ADMIN_RANK: PlayerRank = {
   id: 'administrador',
   label: 'Administrador',

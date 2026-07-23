@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Verifica imports proibidos no domain
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -21,7 +20,6 @@ while IFS= read -r dir; do
   fi
 done <<< "$DOMAIN_DIRS"
 
-# Domain não deve importar infrastructure
 while IFS= read -r dir; do
   if rg -l "from ['\"].*infrastructure" "$dir" --glob '*.ts' 2>/dev/null; then
     echo "  VIOLAÇÃO: domain importa infrastructure em $dir"

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Harness — validação de arquitetura, DDD e conformidade
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -23,7 +22,6 @@ echo "  Root: $ROOT"
 echo "═══════════════════════════════════════"
 echo
 
-# 1. Specs completeness
 echo "── Specs ──"
 SPEC_COUNT=$(find specs -name '*.spec.md' 2>/dev/null | wc -l)
 if [ "$SPEC_COUNT" -eq 12 ]; then
@@ -32,7 +30,6 @@ else
   fail "Esperado 12 specs, encontrado $SPEC_COUNT"
 fi
 
-# 2. Rules
 echo "── Rules ──"
 RULE_COUNT=$(find .cursor/rules -name '*.mdc' 2>/dev/null | wc -l)
 if [ "$RULE_COUNT" -ge 10 ]; then
@@ -41,7 +38,6 @@ else
   warn "Poucas rules ($RULE_COUNT) — recomendado ≥ 10"
 fi
 
-# 3. Layer dependencies (if src exists)
 echo "── Layer Dependencies ──"
 if [ -d "src" ]; then
   bash "$ROOT/harness/scripts/check-layer-dependencies.sh" || FAILURES=$((FAILURES + 1))
@@ -49,7 +45,6 @@ else
   warn "src/ não encontrado — skip layer check (projeto ainda não implementado)"
 fi
 
-# 4. DDD compliance in domain
 echo "── DDD Compliance ──"
 if [ -d "src" ]; then
   bash "$ROOT/harness/scripts/check-ddd-compliance.sh" || FAILURES=$((FAILURES + 1))
@@ -57,7 +52,6 @@ else
   warn "src/ não encontrado — skip DDD check"
 fi
 
-# 5. Prisma isolation
 echo "── Prisma Isolation ──"
 if [ -d "src" ]; then
   bash "$ROOT/harness/scripts/check-prisma-schema.sh" || FAILURES=$((FAILURES + 1))
@@ -65,7 +59,6 @@ else
   warn "src/ não encontrado — skip Prisma check"
 fi
 
-# 6. Architecture structure
 echo "── Architecture ──"
 bash "$ROOT/harness/scripts/check-architecture.sh" || FAILURES=$((FAILURES + 1))
 

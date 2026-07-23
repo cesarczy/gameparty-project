@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-/** Variáveis opcionais vazias no .env (ex.: GOOGLE_CLIENT_ID=) viram undefined */
 const optionalNonEmptyString = z.preprocess(
   (value) => (value === '' || value === undefined ? undefined : value),
   z.string().min(1).optional(),
@@ -14,7 +13,6 @@ const envSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
-  /** 0 = desativa purge automático de mensagens de sala */
   ROOM_MESSAGE_RETENTION_DAYS: z.coerce.number().int().min(0).default(90),
   MESSAGE_PURGE_INTERVAL_HOURS: z.coerce.number().int().min(1).default(24),
 });

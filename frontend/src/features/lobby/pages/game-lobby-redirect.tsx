@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../../shared/api/client';
 import { ErrorState, Spinner } from '../../../shared/ui';
 
-/** Redireciona /jogos/:slug/lobby → /salas/:roomId */
 export function GameLobbyRedirectPage() {
   const { slug = '' } = useParams();
   const navigate = useNavigate();

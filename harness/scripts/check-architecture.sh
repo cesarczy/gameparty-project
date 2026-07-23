@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Verifica estrutura mínima do kit/projeto
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -21,7 +20,6 @@ for path in "${required[@]}"; do
   fi
 done
 
-# Se projeto implementado, verificar módulos
 if [ -d "$ROOT/src/modules" ]; then
   for mod in "$ROOT/src/modules"/*; do
     [ -d "$mod" ] || continue

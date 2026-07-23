@@ -1,24 +1,20 @@
 #!/usr/bin/env bash
-# Podman-first no Fedora (evita permission denied em /var/run/docker.sock)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 pick_compose() {
-  # 1) podman-compose (pacote Fedora) — rootless, sem docker.sock
   if command -v podman-compose &>/dev/null && podman info &>/dev/null 2>&1; then
     echo "podman-compose"
     return
   fi
 
-  # 2) podman compose nativo
   if podman compose version &>/dev/null 2>&1 && podman info &>/dev/null 2>&1; then
     echo "podman compose"
     return
   fi
 
-  # 3) docker compose só se o daemon responder (usuário no grupo docker, etc.)
   if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
     echo "docker compose"
     return

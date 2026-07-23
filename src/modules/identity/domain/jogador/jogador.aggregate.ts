@@ -374,7 +374,6 @@ export class Jogador {
     this.props.lastSeenAt = now;
   }
 
-  /** Atualiza presença no máximo a cada minuto para reduzir writes. */
   touchPresence(now: Date = new Date()): boolean {
     if (this.props.lastSeenAt) {
       const diffMs = now.getTime() - this.props.lastSeenAt.getTime();
