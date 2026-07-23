@@ -9,5 +9,4 @@ coverage/
 uploads/*
 !uploads/.gitkeep
 
-# Books (large binaries — keep external)
 references/books/

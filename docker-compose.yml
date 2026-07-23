@@ -1,6 +1,3 @@
-# GameParty — desenvolvimento containerizado
-# Fedora: podman-compose (rootless) — ./docker/dev.sh up
-
 name: gameparty
 
 services:

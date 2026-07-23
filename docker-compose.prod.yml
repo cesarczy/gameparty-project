@@ -1,6 +1,3 @@
-# GameParty — produção (VPS)
-# Uso: cp .env.production.example .env && ./docker/prod.sh up
-
 name: gameparty-prod
 
 services:

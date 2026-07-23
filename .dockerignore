@@ -1,19 +1,15 @@
-# Dependencies
 node_modules/
 frontend/node_modules/
 
-# Build / cache
 dist/
 frontend/dist/
 coverage/
 .prisma/
 
-# Environment
 .env
 .env.local
 .env.production
 
-# Dev / docs / kit DDD (não entram na imagem de produção)
 docs/
 specs/
 prompts/
@@ -27,13 +23,10 @@ templates/
 *.md
 !README.md
 
-# Logs & OS
 *.log
 .DS_Store
 
-# Books (large binaries)
 references/books/
 
-# Uploads locais (produção usa volume Docker)
 uploads/*
 !uploads/.gitkeep
