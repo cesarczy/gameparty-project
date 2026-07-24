@@ -31,6 +31,19 @@ function maskEmail(email: string) {
   return `${visible}${'*'.repeat(Math.max(local.length - 2, 4))}@${domain}`;
 }
 
+function FieldHint({ message }: { message?: string | null }) {
+  if (!message) return null;
+  return (
+    <p className="field-error" role="alert">
+      {message}
+    </p>
+  );
+}
+
+function isSenhaAtualErrorMessage(message: string): boolean {
+  return message.toLowerCase().includes('senha atual');
+}
+
 export function ProfilePage() {
   const { updateSession } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -48,6 +61,7 @@ export function ProfilePage() {
   const [emailSenha, setEmailSenha] = useState('');
   const [senhaAtual, setSenhaAtual] = useState('');
   const [senhaNova, setSenhaNova] = useState('');
+  const [senhaAtualError, setSenhaAtualError] = useState<string | null>(null);
   const [friends, setFriends] = useState<FriendSummary[]>([]);
   const [pendingFriends, setPendingFriends] = useState<Array<{ requesterId: string; displayName: string }>>([]);
   const [blocked, setBlocked] = useState<Array<{ playerId: string; displayName: string }>>([]);
@@ -116,6 +130,7 @@ export function ProfilePage() {
   function flash(msg: string) {
     setSuccess(msg);
     setError(null);
+    setSenhaAtualError(null);
     setTimeout(() => setSuccess(null), 3000);
   }
 
@@ -151,6 +166,7 @@ export function ProfilePage() {
 
   async function savePassword(e: React.FormEvent) {
     e.preventDefault();
+    setSenhaAtualError(null);
     try {
       await api.changePassword({
         senhaAtual: profile?.hasPassword ? senhaAtual : undefined,
@@ -162,7 +178,15 @@ export function ProfilePage() {
       const p = await api.getProfile();
       setProfile(p);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro');
+      const message = err instanceof Error ? err.message : 'Erro';
+      if (profile?.hasPassword && isSenhaAtualErrorMessage(message)) {
+        setSenhaAtualError(message);
+        setError(null);
+        document.getElementById('senhaAtual')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('senhaAtual')?.focus();
+      } else {
+        setError(message);
+      }
     }
   }
 
@@ -429,8 +453,14 @@ export function ProfilePage() {
                         data-form-type="other"
                         minLength={8}
                         value={senhaAtual}
-                        onChange={(e) => setSenhaAtual(e.target.value)}
+                        aria-invalid={senhaAtualError ? true : undefined}
+                        className={senhaAtualError ? 'field-invalid' : ''}
+                        onChange={(e) => {
+                          setSenhaAtual(e.target.value);
+                          if (senhaAtualError) setSenhaAtualError(null);
+                        }}
                       />
+                      <FieldHint message={senhaAtualError} />
                     </>
                   )}
                   <Label htmlFor="senhaNova">Nova senha</Label>
