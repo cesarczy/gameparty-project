@@ -1,5 +1,5 @@
-import { NotFoundError } from '@shared/application/application.error.js';
-import { resolveGameCoverFallback, resolveGameCoverUrl } from '@catalog/infrastructure/game-covers.js';
+import { ApplicationError, NotFoundError } from '@shared/application/application.error.js';
+import { resolveGameCoverForJogo } from '@catalog/infrastructure/game-covers.js';
 import type { JogoRepository } from '@catalog/application/ports/jogo.repository.js';
 import { JogoId } from '@catalog/domain/value-objects/jogo-id.vo.js';
 import type { SalaRepository } from '../ports/sala.repository.js';
@@ -36,8 +36,16 @@ export class ObterSalaUseCase {
       throw new NotFoundError('Jogo', sala.gameId);
     }
 
+    if (!jogo.active) {
+      throw new ApplicationError('O chat deste jogo está desativado.');
+    }
+
     const slug = jogo.slug.toString();
-    const coverUrl = resolveGameCoverUrl(slug) ?? resolveGameCoverFallback(jogo.name);
+    const coverUrl = resolveGameCoverForJogo({
+      slug,
+      name: jogo.name,
+      coverUrl: jogo.coverUrl,
+    });
 
     return {
       roomId: sala.id.toString(),

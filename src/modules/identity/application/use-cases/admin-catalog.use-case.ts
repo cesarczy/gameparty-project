@@ -8,6 +8,10 @@ import { CategoriaId } from '@catalog/domain/value-objects/categoria-id.vo.js';
 import { JogoId } from '@catalog/domain/value-objects/jogo-id.vo.js';
 import type { CategoriaRepository } from '@catalog/application/ports/categoria.repository.js';
 import type { JogoRepository } from '@catalog/application/ports/jogo.repository.js';
+import { AtualizarJogoUseCase } from '@catalog/application/use-cases/atualizar-jogo.use-case.js';
+import { AtualizarCategoriaUseCase } from '@catalog/application/use-cases/atualizar-categoria.use-case.js';
+import { UploadCapaJogoUseCase } from '@catalog/application/use-cases/upload-capa-jogo.use-case.js';
+import { resolveGameCoverForJogo } from '@catalog/infrastructure/game-covers.js';
 import { GameMode } from '@catalog/domain/value-objects/game-mode.vo.js';
 
 async function assertAdmin(jogadorRepo: JogadorRepository, requesterId: string) {
@@ -116,6 +120,86 @@ export class AlterarStatusJogoAdminUseCase {
   }
 }
 
+export class ObterJogoAdminUseCase {
+  constructor(
+    private readonly jogadorRepo: JogadorRepository,
+    private readonly jogoRepo: JogoRepository,
+  ) {}
+
+  async execute(input: { requesterId: string; gameId: string }) {
+    await assertAdmin(this.jogadorRepo, input.requesterId);
+    const jogo = await this.jogoRepo.findById(JogoId.create(input.gameId));
+    if (!jogo) throw new NotFoundError('Jogo', input.gameId);
+
+    const slug = jogo.slug.toString();
+    return {
+      gameId: jogo.id.toString(),
+      name: jogo.name,
+      slug,
+      active: jogo.active,
+      coverUrl: jogo.coverUrl,
+      coverDisplayUrl: resolveGameCoverForJogo({
+        slug,
+        name: jogo.name,
+        coverUrl: jogo.coverUrl,
+      }),
+      categoryIds: [...jogo.categoryIds],
+    };
+  }
+}
+
+export class AtualizarJogoAdminUseCase {
+  constructor(
+    private readonly jogadorRepo: JogadorRepository,
+    private readonly atualizarJogo: AtualizarJogoUseCase,
+  ) {}
+
+  async execute(input: {
+    requesterId: string;
+    gameId: string;
+    name: string;
+    slug: string;
+    active: boolean;
+  }) {
+    await assertAdmin(this.jogadorRepo, input.requesterId);
+    const result = await this.atualizarJogo.execute({
+      gameId: input.gameId,
+      name: input.name,
+      slug: input.slug,
+      active: input.active,
+    });
+    return {
+      ...result,
+      coverDisplayUrl: resolveGameCoverForJogo({
+        slug: result.slug,
+        name: result.name,
+        coverUrl: result.coverUrl,
+      }),
+    };
+  }
+}
+
+export class UploadCapaJogoAdminUseCase {
+  constructor(
+    private readonly jogadorRepo: JogadorRepository,
+    private readonly uploadCapa: UploadCapaJogoUseCase,
+  ) {}
+
+  async execute(input: {
+    requesterId: string;
+    gameId: string;
+    buffer: Buffer;
+    mimetype: string;
+  }) {
+    await assertAdmin(this.jogadorRepo, input.requesterId);
+    return this.uploadCapa.execute({
+      gameId: input.gameId,
+      buffer: input.buffer,
+      mimetype: input.mimetype,
+    });
+  }
+}
+
 export class AlterarStatusCategoriaAdminUseCase {
   constructor(
     private readonly jogadorRepo: JogadorRepository,
@@ -160,5 +244,50 @@ export class ListarCategoriasAdminUseCase {
         active: c.active,
       })),
     };
+  }
+}
+
+export class ObterCategoriaAdminUseCase {
+  constructor(
+    private readonly jogadorRepo: JogadorRepository,
+    private readonly categoriaRepo: CategoriaRepository,
+  ) {}
+
+  async execute(input: { requesterId: string; categoryId: string }) {
+    await assertAdmin(this.jogadorRepo, input.requesterId);
+    const categoria = await this.categoriaRepo.findById(CategoriaId.create(input.categoryId));
+    if (!categoria) throw new NotFoundError('Categoria', input.categoryId);
+
+    const linkedGames = await this.categoriaRepo.countLinkedGames(categoria.id);
+    return {
+      categoryId: categoria.id.toString(),
+      name: categoria.name,
+      slug: categoria.slug.toString(),
+      active: categoria.active,
+      linkedGamesCount: linkedGames,
+    };
+  }
+}
+
+export class AtualizarCategoriaAdminUseCase {
+  constructor(
+    private readonly jogadorRepo: JogadorRepository,
+    private readonly atualizarCategoria: AtualizarCategoriaUseCase,
+  ) {}
+
+  async execute(input: {
+    requesterId: string;
+    categoryId: string;
+    name: string;
+    slug: string;
+    active: boolean;
+  }) {
+    await assertAdmin(this.jogadorRepo, input.requesterId);
+    return this.atualizarCategoria.execute({
+      categoryId: input.categoryId,
+      name: input.name,
+      slug: input.slug,
+      active: input.active,
+    });
   }
 }

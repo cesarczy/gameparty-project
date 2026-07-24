@@ -15,7 +15,7 @@ export class PrismaJogoRepository implements JogoRepository {
     await this.prisma.jogo.upsert({
       where: { id: data.id },
       create: data,
-      update: { name: data.name, slug: data.slug, active: data.active },
+      update: { name: data.name, slug: data.slug, active: data.active, coverUrl: data.coverUrl },
     });
 
     await this.prisma.jogoModo.deleteMany({ where: { jogoId: data.id } });

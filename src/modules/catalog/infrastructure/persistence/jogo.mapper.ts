@@ -19,6 +19,7 @@ export class JogoMapper {
       id: JogoId.create(row.id),
       name: row.name,
       slug: Slug.create(row.slug),
+      coverUrl: row.coverUrl,
       categoryIds: row.categorias.map((c) => c.categoriaId),
       supportedModes: row.supportedModes.map((m) => m.mode as GameMode),
       active: row.active,
@@ -30,6 +31,7 @@ export class JogoMapper {
       id: jogo.id.toString(),
       name: jogo.name,
       slug: jogo.slug.toString(),
+      coverUrl: jogo.coverUrl,
       active: jogo.active,
     };
   }

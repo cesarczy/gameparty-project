@@ -39,11 +39,16 @@ import {
 import {
   AlterarStatusCategoriaAdminUseCase,
   AlterarStatusJogoAdminUseCase,
+  AtualizarCategoriaAdminUseCase,
+  AtualizarJogoAdminUseCase,
   CadastrarCategoriaAdminUseCase,
   CadastrarJogoAdminUseCase,
   ExcluirCategoriaAdminUseCase,
   ExcluirJogoAdminUseCase,
   ListarCategoriasAdminUseCase,
+  ObterCategoriaAdminUseCase,
+  ObterJogoAdminUseCase,
+  UploadCapaJogoAdminUseCase,
 } from '@identity/application/use-cases/admin-catalog.use-case.js';
 import { AdicionarJogoFavoritoUseCase } from '@identity/application/use-cases/adicionar-jogo-favorito.use-case.js';
 import { RemoverJogoFavoritoUseCase } from '@identity/application/use-cases/remover-jogo-favorito.use-case.js';
@@ -54,6 +59,10 @@ import { ListarJogosPorCategoriaUseCase } from '@catalog/application/use-cases/l
 import { ObterJogoPorSlugUseCase } from '@catalog/application/use-cases/obter-jogo-por-slug.use-case.js';
 import { CadastrarCategoriaUseCase } from '@catalog/application/use-cases/cadastrar-categoria.use-case.js';
 import { CadastrarJogoUseCase } from '@catalog/application/use-cases/cadastrar-jogo.use-case.js';
+import { AtualizarCategoriaUseCase } from '@catalog/application/use-cases/atualizar-categoria.use-case.js';
+import { AtualizarJogoUseCase } from '@catalog/application/use-cases/atualizar-jogo.use-case.js';
+import { UploadCapaJogoUseCase } from '@catalog/application/use-cases/upload-capa-jogo.use-case.js';
+import type { GameCoverStorage } from '@catalog/application/ports/game-cover-storage.port.js';
 import { registerCatalogRoutes } from '@catalog/presentation/http/catalog.routes.js';
 import { ListarSalasAtivasUseCase } from '@live-rooms/application/use-cases/listar-salas-ativas.use-case.js';
 import { ObterLobbyPorSlugUseCase } from '@live-rooms/application/use-cases/obter-lobby-por-slug.use-case.js';
@@ -94,6 +103,12 @@ import { JogoId } from '@catalog/domain/value-objects/jogo-id.vo.js';
 class FakeAvatarStorage implements AvatarStorage {
   async save(playerId: string) {
     return `/uploads/avatars/${playerId}.jpg`;
+  }
+}
+
+class FakeGameCoverStorage implements GameCoverStorage {
+  async save(gameId: string) {
+    return `/uploads/game-covers/${gameId}.jpg`;
   }
 }
 
@@ -364,8 +379,19 @@ export async function buildTestApp(config?: Partial<AppConfig>) {
     excluirCategoria: new ExcluirCategoriaAdminUseCase(jogadorRepo, categoriaRepo),
     cadastrarJogo: new CadastrarJogoAdminUseCase(jogadorRepo, new CadastrarJogoUseCase(jogoRepo, categoriaRepo, eventBus)),
     excluirJogo: new ExcluirJogoAdminUseCase(jogadorRepo, jogoRepo),
+    obterJogo: new ObterJogoAdminUseCase(jogadorRepo, jogoRepo),
+    atualizarJogo: new AtualizarJogoAdminUseCase(jogadorRepo, new AtualizarJogoUseCase(jogoRepo)),
+    uploadCapaJogo: new UploadCapaJogoAdminUseCase(
+      jogadorRepo,
+      new UploadCapaJogoUseCase(jogoRepo, new FakeGameCoverStorage()),
+    ),
     alterarStatusJogo: new AlterarStatusJogoAdminUseCase(jogadorRepo, jogoRepo),
     alterarStatusCategoria: new AlterarStatusCategoriaAdminUseCase(jogadorRepo, categoriaRepo),
+    obterCategoria: new ObterCategoriaAdminUseCase(jogadorRepo, categoriaRepo),
+    atualizarCategoria: new AtualizarCategoriaAdminUseCase(
+      jogadorRepo,
+      new AtualizarCategoriaUseCase(categoriaRepo),
+    ),
     listarCategoriasAdmin: new ListarCategoriasAdminUseCase(jogadorRepo, categoriaRepo),
     listarLogsJogador: new ListarLogsJogadorAdminUseCase(jogadorRepo, activityLogRepo),
     listarLogsGlobais: new ListarLogsGlobaisAdminUseCase(jogadorRepo, activityLogRepo),

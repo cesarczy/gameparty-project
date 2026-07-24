@@ -1,9 +1,6 @@
 import type { JogoRepository } from '../ports/jogo.repository.js';
 import type { SalaRepository } from '@live-rooms/application/ports/sala.repository.js';
-import {
-  resolveGameCoverFallback,
-  resolveGameCoverUrl,
-} from '../../infrastructure/game-covers.js';
+import { resolveGameCoverForJogo } from '../../infrastructure/game-covers.js';
 
 export interface ListarJogosPorCategoriaInput {
   categoryId: string;
@@ -40,7 +37,7 @@ export class ListarJogosPorCategoriaUseCase {
           supportedModes: [...j.supportedModes],
           active: j.active,
           lobbyRoomId: sala?.id.toString() ?? null,
-          coverUrl: resolveGameCoverUrl(slug) ?? resolveGameCoverFallback(j.name),
+          coverUrl: resolveGameCoverForJogo({ slug, name: j.name, coverUrl: j.coverUrl }),
         };
       }),
     );

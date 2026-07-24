@@ -161,7 +161,7 @@ export function RoomPage() {
                   isAdmin={m.authorRole === 'ADMIN'}
                 />
               )}
-              <span>{displayContent(m.content)}</span>
+              <span className="message-text">{displayContent(m.content)}</span>
             </div>
           ))}
         </div>
@@ -279,7 +279,7 @@ export function DmPage() {
           {messages.map((m) => (
             <div key={m.messageId} className={`message ${m.senderId === playerId ? 'own' : ''}`}>
               <span className="message-author">{m.senderDisplayName}</span>
-              <span>{m.content}</span>
+              <span className="message-text">{m.content}</span>
             </div>
           ))}
         </div>

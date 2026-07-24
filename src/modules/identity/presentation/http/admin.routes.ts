@@ -24,7 +24,12 @@ import {
   ExcluirJogoAdminUseCase,
   AlterarStatusJogoAdminUseCase,
   AlterarStatusCategoriaAdminUseCase,
+  AtualizarCategoriaAdminUseCase,
+  AtualizarJogoAdminUseCase,
   ListarCategoriasAdminUseCase,
+  ObterCategoriaAdminUseCase,
+  ObterJogoAdminUseCase,
+  UploadCapaJogoAdminUseCase,
 } from '../../application/use-cases/admin-catalog.use-case.js';
 import {
   ListarLogsGlobaisAdminUseCase,
@@ -35,6 +40,7 @@ import { logAdminAction } from './activity-audit.helper.js';
 import { JogadorId } from '../../domain/value-objects/jogador-id.vo.js';
 import { PlayerRole } from '../../domain/value-objects/player-role.vo.js';
 import { requireAuth } from '@shared/presentation/http/auth.hook.js';
+import { ApplicationError } from '@shared/application/application.error.js';
 
 function collectAdminPlayerChanges(
   before: {
@@ -93,9 +99,14 @@ export function registerAdminRoutes(
     excluirCategoria: ExcluirCategoriaAdminUseCase;
     cadastrarJogo: CadastrarJogoAdminUseCase;
     excluirJogo: ExcluirJogoAdminUseCase;
+    obterJogo: ObterJogoAdminUseCase;
+    atualizarJogo: AtualizarJogoAdminUseCase;
+    uploadCapaJogo: UploadCapaJogoAdminUseCase;
     alterarStatusJogo: AlterarStatusJogoAdminUseCase;
     alterarStatusCategoria: AlterarStatusCategoriaAdminUseCase;
     listarCategoriasAdmin: ListarCategoriasAdminUseCase;
+    obterCategoria: ObterCategoriaAdminUseCase;
+    atualizarCategoria: AtualizarCategoriaAdminUseCase;
     listarLogsJogador: ListarLogsJogadorAdminUseCase;
     listarLogsGlobais: ListarLogsGlobaisAdminUseCase;
     definirRole: DefinirRoleJogadorUseCase;
@@ -250,6 +261,23 @@ export function registerAdminRoutes(
     return deps.excluirCategoria.execute({ requesterId, categoryId });
   });
 
+  app.get('/api/admin/categorias/:categoryId', async (request) => {
+    const requesterId = requireAuth(request);
+    const { categoryId } = z.object({ categoryId: z.string().uuid() }).parse(request.params);
+    return deps.obterCategoria.execute({ requesterId, categoryId });
+  });
+
+  app.patch('/api/admin/categorias/:categoryId', async (request) => {
+    const requesterId = requireAuth(request);
+    const { categoryId } = z.object({ categoryId: z.string().uuid() }).parse(request.params);
+    const body = z.object({
+      name: z.string().min(1).max(64),
+      slug: z.string().min(1).max(64),
+      active: z.boolean(),
+    }).parse(request.body);
+    return deps.atualizarCategoria.execute({ requesterId, categoryId, ...body });
+  });
+
   app.post('/api/admin/jogos', async (request, reply) => {
     const requesterId = requireAuth(request);
     const body = z.object({
@@ -265,6 +293,41 @@ export function registerAdminRoutes(
     const requesterId = requireAuth(request);
     const { gameId } = z.object({ gameId: z.string().uuid() }).parse(request.params);
     return deps.excluirJogo.execute({ requesterId, gameId });
+  });
+
+  app.get('/api/admin/jogos/:gameId', async (request) => {
+    const requesterId = requireAuth(request);
+    const { gameId } = z.object({ gameId: z.string().uuid() }).parse(request.params);
+    return deps.obterJogo.execute({ requesterId, gameId });
+  });
+
+  app.patch('/api/admin/jogos/:gameId', async (request) => {
+    const requesterId = requireAuth(request);
+    const { gameId } = z.object({ gameId: z.string().uuid() }).parse(request.params);
+    const body = z.object({
+      name: z.string().min(1).max(120),
+      slug: z.string().min(1).max(120),
+      active: z.boolean(),
+    }).parse(request.body);
+    const result = await deps.atualizarJogo.execute({ requesterId, gameId, ...body });
+    return result;
+  });
+
+  app.post('/api/admin/jogos/:gameId/cover', async (request, reply) => {
+    const requesterId = requireAuth(request);
+    const { gameId } = z.object({ gameId: z.string().uuid() }).parse(request.params);
+    const file = await request.file();
+    if (!file) {
+      throw new ApplicationError('Envie um arquivo de imagem');
+    }
+    const buffer = await file.toBuffer();
+    const result = await deps.uploadCapaJogo.execute({
+      requesterId,
+      gameId,
+      buffer,
+      mimetype: file.mimetype,
+    });
+    return reply.status(201).send(result);
   });
 
   app.patch('/api/admin/jogos/:gameId/status', async (request) => {

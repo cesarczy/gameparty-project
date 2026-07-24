@@ -1,4 +1,4 @@
-import { NotFoundError } from '@shared/application/application.error.js';
+import { ApplicationError, NotFoundError } from '@shared/application/application.error.js';
 import type { JogoRepository } from '@catalog/application/ports/jogo.repository.js';
 import type { SalaRepository } from '@live-rooms/application/ports/sala.repository.js';
 import { Slug } from '@catalog/domain/value-objects/slug.vo.js';
@@ -25,6 +25,10 @@ export class ObterLobbyPorSlugUseCase {
     const jogo = await this.jogoRepo.findBySlug(Slug.create(input.slug));
     if (!jogo) {
       throw new NotFoundError('Jogo', input.slug);
+    }
+
+    if (!jogo.active) {
+      throw new ApplicationError('O chat deste jogo está desativado.');
     }
 
     const sala = await this.salaRepo.findByGameId(jogo.id.toString());

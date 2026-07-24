@@ -10,6 +10,7 @@ export interface JogoProps {
   id: JogoId;
   name: string;
   slug: Slug;
+  coverUrl: string | null;
   categoryIds: string[];
   supportedModes: GameMode[];
   active: boolean;
@@ -35,6 +36,7 @@ export class Jogo {
       id: JogoId.create(),
       name: input.name.trim(),
       slug: Slug.create(input.slug),
+      coverUrl: null,
       categoryIds: [...new Set(input.categoryIds)],
       supportedModes: [...input.supportedModes],
       active: true,
@@ -67,6 +69,10 @@ export class Jogo {
     return this.props.slug;
   }
 
+  get coverUrl(): string | null {
+    return this.props.coverUrl;
+  }
+
   get categoryIds(): readonly string[] {
     return [...this.props.categoryIds];
   }
@@ -89,6 +95,19 @@ export class Jogo {
 
   ativar(): void {
     this.props.active = true;
+  }
+
+  atualizarIdentidade(input: { name: string; slug: string }): void {
+    const name = input.name.trim();
+    if (!name) {
+      throw new DomainError('Nome do jogo é obrigatório');
+    }
+    this.props.name = name;
+    this.props.slug = Slug.create(input.slug);
+  }
+
+  definirCoverUrl(url: string | null): void {
+    this.props.coverUrl = url;
   }
 
   pullDomainEvents(): DomainEvent[] {

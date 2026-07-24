@@ -59,4 +59,13 @@ export class Categoria {
   ativar(): void {
     this.props.active = true;
   }
+
+  atualizarIdentidade(input: { name: string; slug: string }): void {
+    const name = input.name.trim();
+    if (!name) {
+      throw new CategoriaNomeInvalidoError();
+    }
+    this.props.name = name;
+    this.props.slug = Slug.create(input.slug);
+  }
 }

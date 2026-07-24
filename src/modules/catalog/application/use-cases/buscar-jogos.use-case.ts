@@ -1,8 +1,7 @@
 import type { JogoRepository } from '../ports/jogo.repository.js';
 import type { SalaRepository } from '@live-rooms/application/ports/sala.repository.js';
 import {
-  resolveGameCoverFallback,
-  resolveGameCoverUrl,
+  resolveGameCoverForJogo,
 } from '../../infrastructure/game-covers.js';
 
 export interface BuscarJogosInput {
@@ -37,7 +36,7 @@ export class BuscarJogosUseCase {
           name: j.name,
           slug,
           lobbyRoomId: sala?.id.toString() ?? null,
-          coverUrl: resolveGameCoverUrl(slug) ?? resolveGameCoverFallback(j.name),
+          coverUrl: resolveGameCoverForJogo({ slug, name: j.name, coverUrl: j.coverUrl }),
         };
       }),
     );

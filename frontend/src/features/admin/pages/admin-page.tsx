@@ -14,6 +14,8 @@ import { useAuth } from '../../../app/auth-context';
 import { AppLayout } from '../../../shared/layout/app-layout';
 import { Button, Card, ErrorState, RankBadge, Spinner } from '../../../shared/ui';
 import { AdminPlayerEditModal } from '../components/admin-player-edit-modal';
+import { AdminGameEditModal } from '../components/admin-game-edit-modal';
+import { AdminCategoryEditModal } from '../components/admin-category-edit-modal';
 import { AdminPlayerSearch } from '../components/admin-player-search';
 import { AdminReportDetailModal, truncateReportDetails } from '../components/admin-report-detail-modal';
 import { AdminGlobalLogsPanel } from '../components/admin-activity-logs';
@@ -123,6 +125,8 @@ export function AdminPage() {
   const [view, setView] = useState<AdminView>('usuarios');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [editPlayerId, setEditPlayerId] = useState<string | null>(null);
+  const [editGameId, setEditGameId] = useState<string | null>(null);
+  const [editCategoryId, setEditCategoryId] = useState<string | null>(null);
   const [openReport, setOpenReport] = useState<AdminReport | null>(null);
   const [categoryName, setCategoryName] = useState('');
   const [categorySlug, setCategorySlug] = useState('');
@@ -610,6 +614,9 @@ export function AdminPage() {
                             <Link to={`/jogos/${game.slug}/lobby`} className="admin-inline-link">
                               Ver lobby
                             </Link>
+                            <Button variant="ghost" className="btn-sm" onClick={() => setEditGameId(game.gameId)}>
+                              Alterar
+                            </Button>
                             <Button variant="ghost" className="btn-sm" onClick={() => toggleGameStatus(game)}>
                               {game.active ? 'Desativar' : 'Ativar'}
                             </Button>
@@ -655,6 +662,9 @@ export function AdminPage() {
                         </td>
                         <td>
                           <div className="admin-row-actions">
+                            <Button variant="ghost" className="btn-sm" onClick={() => setEditCategoryId(category.categoryId)}>
+                              Alterar
+                            </Button>
                             <Button variant="ghost" className="btn-sm" onClick={() => toggleCategoryStatus(category)}>
                               {(category.active ?? true) ? 'Desativar' : 'Ativar'}
                             </Button>
@@ -680,6 +690,18 @@ export function AdminPage() {
       <AdminPlayerEditModal
         playerId={editPlayerId}
         onClose={() => setEditPlayerId(null)}
+        onSaved={load}
+      />
+
+      <AdminGameEditModal
+        gameId={editGameId}
+        onClose={() => setEditGameId(null)}
+        onSaved={load}
+      />
+
+      <AdminCategoryEditModal
+        categoryId={editCategoryId}
+        onClose={() => setEditCategoryId(null)}
         onSaved={load}
       />
 

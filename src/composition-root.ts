@@ -49,7 +49,12 @@ import {
   ExcluirJogoAdminUseCase,
   AlterarStatusJogoAdminUseCase,
   AlterarStatusCategoriaAdminUseCase,
+  AtualizarCategoriaAdminUseCase,
+  AtualizarJogoAdminUseCase,
   ListarCategoriasAdminUseCase,
+  ObterCategoriaAdminUseCase,
+  ObterJogoAdminUseCase,
+  UploadCapaJogoAdminUseCase,
 } from '@identity/application/use-cases/admin-catalog.use-case.js';
 import {
   ListarLogsGlobaisAdminUseCase,
@@ -70,6 +75,10 @@ import { ListarJogosPorCategoriaUseCase } from '@catalog/application/use-cases/l
 import { ObterJogoPorSlugUseCase } from '@catalog/application/use-cases/obter-jogo-por-slug.use-case.js';
 import { CadastrarCategoriaUseCase } from '@catalog/application/use-cases/cadastrar-categoria.use-case.js';
 import { CadastrarJogoUseCase } from '@catalog/application/use-cases/cadastrar-jogo.use-case.js';
+import { AtualizarCategoriaUseCase } from '@catalog/application/use-cases/atualizar-categoria.use-case.js';
+import { AtualizarJogoUseCase } from '@catalog/application/use-cases/atualizar-jogo.use-case.js';
+import { UploadCapaJogoUseCase } from '@catalog/application/use-cases/upload-capa-jogo.use-case.js';
+import { LocalGameCoverStorage } from '@catalog/infrastructure/storage/local-game-cover.storage.js';
 import { registerCatalogRoutes } from '@catalog/presentation/http/catalog.routes.js';
 
 import { PrismaSalaRepository } from '@live-rooms/infrastructure/persistence/prisma-sala.repository.js';
@@ -148,6 +157,7 @@ export async function buildApp(config?: AppConfig): Promise<AppContainer> {
   });
 
   const avatarStorage = new LocalAvatarStorage(uploadsRoot);
+  const gameCoverStorage = new LocalGameCoverStorage(uploadsRoot);
   const atualizarAvatar = new AtualizarAvatarUseCase(jogadorRepo);
 
   registerErrorHandler(app);
@@ -241,8 +251,22 @@ export async function buildApp(config?: AppConfig): Promise<AppContainer> {
       new CadastrarJogoUseCase(jogoRepo, categoriaRepo, eventBus),
     ),
     excluirJogo: new ExcluirJogoAdminUseCase(jogadorRepo, jogoRepo),
+    obterJogo: new ObterJogoAdminUseCase(jogadorRepo, jogoRepo),
+    atualizarJogo: new AtualizarJogoAdminUseCase(
+      jogadorRepo,
+      new AtualizarJogoUseCase(jogoRepo),
+    ),
+    uploadCapaJogo: new UploadCapaJogoAdminUseCase(
+      jogadorRepo,
+      new UploadCapaJogoUseCase(jogoRepo, gameCoverStorage),
+    ),
     alterarStatusJogo: new AlterarStatusJogoAdminUseCase(jogadorRepo, jogoRepo),
     alterarStatusCategoria: new AlterarStatusCategoriaAdminUseCase(jogadorRepo, categoriaRepo),
+    obterCategoria: new ObterCategoriaAdminUseCase(jogadorRepo, categoriaRepo),
+    atualizarCategoria: new AtualizarCategoriaAdminUseCase(
+      jogadorRepo,
+      new AtualizarCategoriaUseCase(categoriaRepo),
+    ),
     listarCategoriasAdmin: new ListarCategoriasAdminUseCase(jogadorRepo, categoriaRepo),
     listarLogsJogador: new ListarLogsJogadorAdminUseCase(jogadorRepo, activityLogRepo),
     listarLogsGlobais: new ListarLogsGlobaisAdminUseCase(jogadorRepo, activityLogRepo),

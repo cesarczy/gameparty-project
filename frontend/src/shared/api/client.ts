@@ -115,6 +115,12 @@ export interface AdminGame {
   active: boolean;
 }
 
+export interface AdminGameDetail extends AdminGame {
+  coverUrl: string | null;
+  coverDisplayUrl: string;
+  categoryIds: string[];
+}
+
 export interface ActivityLogEntry {
   logId: string;
   category: 'AUTH' | 'PROFILE' | 'ADMIN' | 'SECURITY';
@@ -156,6 +162,14 @@ export interface Category {
   name: string;
   slug: string;
   active?: boolean;
+}
+
+export interface AdminCategoryDetail {
+  categoryId: string;
+  name: string;
+  slug: string;
+  active: boolean;
+  linkedGamesCount: number;
 }
 
 export interface Game {
@@ -507,6 +521,18 @@ export const api = {
       method: 'DELETE',
     }),
 
+  getAdminCategory: (categoryId: string) =>
+    request<AdminCategoryDetail>(`/api/admin/categorias/${categoryId}`),
+
+  updateAdminCategory: (
+    categoryId: string,
+    payload: { name: string; slug: string; active: boolean },
+  ) =>
+    request<AdminCategoryDetail>(`/api/admin/categorias/${categoryId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
   createAdminGame: (payload: { name: string; slug: string; categoryId: string }) =>
     request<{ gameId: string; name: string; slug: string }>('/api/admin/jogos', {
       method: 'POST',
@@ -523,6 +549,27 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ active }),
     }),
+
+  getAdminGame: (gameId: string) =>
+    request<AdminGameDetail>(`/api/admin/jogos/${gameId}`),
+
+  updateAdminGame: (
+    gameId: string,
+    payload: { name: string; slug: string; active: boolean },
+  ) =>
+    request<AdminGameDetail>(`/api/admin/jogos/${gameId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  uploadAdminGameCover: (gameId: string, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return request<{ gameId: string; coverUrl: string }>(`/api/admin/jogos/${gameId}/cover`, {
+      method: 'POST',
+      body: form,
+    });
+  },
 
   setAdminCategoryStatus: (categoryId: string, active: boolean) =>
     request<Category & { categoryId: string }>(`/api/admin/categorias/${categoryId}/status`, {

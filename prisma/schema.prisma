@@ -252,6 +252,7 @@ model Jogo {
   id        String   @id @default(uuid())
   name      String
   slug      String   @unique
+  coverUrl  String?  @map("cover_url")
   active    Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

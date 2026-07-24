@@ -174,3 +174,12 @@ export function resolveGameCoverFallback(name: string): string {
     .toUpperCase();
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials || name)}&background=312e81&color=c4b5fd&size=128&bold=true&format=png`;
 }
+
+export function resolveGameCoverForJogo(jogo: {
+  slug: string;
+  name: string;
+  coverUrl?: string | null;
+}): string {
+  if (jogo.coverUrl?.trim()) return jogo.coverUrl;
+  return resolveGameCoverUrl(jogo.slug) ?? resolveGameCoverFallback(jogo.name);
+}
