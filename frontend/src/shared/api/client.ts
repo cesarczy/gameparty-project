@@ -246,8 +246,13 @@ export class ApiError extends Error {
   }
 }
 
+function isWrongCurrentPasswordMessage(message: string): boolean {
+  return message.toLowerCase().includes('senha atual');
+}
+
 export function isSessionInvalidError(error: unknown): boolean {
   if (!(error instanceof ApiError)) return false;
+  if (isWrongCurrentPasswordMessage(error.message)) return false;
   if (error.status === 401) return true;
   return error.status === 404 && error.message.toLowerCase().includes('sessão');
 }
@@ -280,7 +285,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const message = body.error ?? 'Erro na requisição';
-    if (token && (res.status === 401 || (res.status === 404 && path.includes('/profile/me')))) {
+    const sessionInvalid =
+      token &&
+      !isWrongCurrentPasswordMessage(message) &&
+      (res.status === 401 || (res.status === 404 && path.includes('/profile/me')));
+    if (sessionInvalid) {
       onSessionInvalid?.();
     }
     throw new ApiError(message, res.status);

@@ -28,7 +28,7 @@ export function mapErrorToStatus(error: unknown): { status: number; message: str
     return { status: 400, message: error.message };
   }
   if (error instanceof SenhaAtualInvalidaError) {
-    return { status: 401, message: error.message };
+    return { status: 422, message: error.message };
   }
   if (error instanceof AvatarUrlInvalidaError || error instanceof AvatarArquivoInvalidoError) {
     return { status: 422, message: error.message };
