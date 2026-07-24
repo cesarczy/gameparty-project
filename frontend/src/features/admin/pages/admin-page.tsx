@@ -6,6 +6,7 @@ import {
   type AdminGame,
   type AdminPanel,
   type AdminPlayer,
+  type AdminReport,
   type AdminGlobalLogs,
   type ActivityLogEntry,
   type Category,
