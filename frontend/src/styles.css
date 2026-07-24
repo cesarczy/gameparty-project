@@ -495,6 +495,9 @@ select.input.field-flash {
   margin: 0 0 1rem; padding: .75rem 1rem; border-radius: 10px;
   background: rgba(52,211,153,.12); color: var(--success); border: 1px solid rgba(52,211,153,.25);
 }
+.success-banner.settings-form-success {
+  margin: .75rem 0 0;
+}
 
 .account-settings {
   display: grid;

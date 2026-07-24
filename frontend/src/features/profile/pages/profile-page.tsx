@@ -62,6 +62,7 @@ export function ProfilePage() {
   const [senhaAtual, setSenhaAtual] = useState('');
   const [senhaNova, setSenhaNova] = useState('');
   const [senhaAtualError, setSenhaAtualError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [friends, setFriends] = useState<FriendSummary[]>([]);
   const [pendingFriends, setPendingFriends] = useState<Array<{ requesterId: string; displayName: string }>>([]);
   const [blocked, setBlocked] = useState<Array<{ playerId: string; displayName: string }>>([]);
@@ -131,6 +132,7 @@ export function ProfilePage() {
     setSuccess(msg);
     setError(null);
     setSenhaAtualError(null);
+    setPasswordSuccess(null);
     setTimeout(() => setSuccess(null), 3000);
   }
 
@@ -167,6 +169,7 @@ export function ProfilePage() {
   async function savePassword(e: React.FormEvent) {
     e.preventDefault();
     setSenhaAtualError(null);
+    setPasswordSuccess(null);
     try {
       await api.changePassword({
         senhaAtual: profile?.hasPassword ? senhaAtual : undefined,
@@ -174,7 +177,12 @@ export function ProfilePage() {
       });
       setSenhaAtual('');
       setSenhaNova('');
-      flash(profile?.hasPassword ? 'Senha alterada.' : 'Senha definida.');
+      const successMsg = profile?.hasPassword
+        ? 'Senha alterada com sucesso.'
+        : 'Senha definida com sucesso.';
+      setPasswordSuccess(successMsg);
+      setError(null);
+      setSuccess(null);
       const p = await api.getProfile();
       setProfile(p);
     } catch (err) {
@@ -458,6 +466,7 @@ export function ProfilePage() {
                         onChange={(e) => {
                           setSenhaAtual(e.target.value);
                           if (senhaAtualError) setSenhaAtualError(null);
+                          if (passwordSuccess) setPasswordSuccess(null);
                         }}
                       />
                       <FieldHint message={senhaAtualError} />
@@ -472,9 +481,21 @@ export function ProfilePage() {
                     required
                     minLength={8}
                     value={senhaNova}
-                    onChange={(e) => setSenhaNova(e.target.value)}
+                    onChange={(e) => {
+                      setSenhaNova(e.target.value);
+                      if (passwordSuccess) setPasswordSuccess(null);
+                    }}
                   />
                   <Button type="submit">{profile?.hasPassword ? 'Alterar senha' : 'Definir senha'}</Button>
+                  {passwordSuccess && (
+                    <p
+                      id="password-form-feedback"
+                      className="success-banner settings-form-success"
+                      role="status"
+                    >
+                      {passwordSuccess}
+                    </p>
+                  )}
                 </form>
               </section>
             </>
