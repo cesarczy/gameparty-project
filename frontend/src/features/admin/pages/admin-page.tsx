@@ -17,7 +17,6 @@ import { Button, Card, ErrorState, RankBadge, Spinner } from '../../../shared/ui
 import { AdminPlayerEditModal } from '../components/admin-player-edit-modal';
 import { AdminGameEditModal } from '../components/admin-game-edit-modal';
 import { AdminCategoryEditModal } from '../components/admin-category-edit-modal';
-import { AdminPlayerSearch } from '../components/admin-player-search';
 import { AdminReportDetailModal, truncateReportDetails } from '../components/admin-report-detail-modal';
 import { AdminGlobalLogsPanel, LOG_TYPE_LABELS } from '../components/admin-activity-logs';
 import { AdminListSearch, SortableTh } from '../components/admin-table-tools';
@@ -45,10 +44,10 @@ type AdminView =
   | 'logs';
 
 const LIST_SEARCH_PLACEHOLDERS: Record<AdminView, string> = {
-  usuarios: 'Filtrar por nome, usuário, e-mail ou status…',
-  online: 'Filtrar usuários online…',
-  'novos-hoje': 'Filtrar novos usuários…',
-  admins: 'Filtrar administradores…',
+  usuarios: 'Nome, usuário ou e-mail…',
+  online: 'Nome, usuário ou e-mail…',
+  'novos-hoje': 'Nome, usuário ou e-mail…',
+  admins: 'Nome, usuário ou e-mail…',
   chats: 'Filtrar por sala, jogo ou participante…',
   denuncias: 'Filtrar denúncias…',
   jogos: 'Filtrar jogos…',
@@ -151,7 +150,6 @@ export function AdminPage() {
   const [games, setGames] = useState<AdminGame[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [view, setView] = useState<AdminView>('usuarios');
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [editPlayerId, setEditPlayerId] = useState<string | null>(null);
   const [editGameId, setEditGameId] = useState<string | null>(null);
   const [editCategoryId, setEditCategoryId] = useState<string | null>(null);
@@ -247,7 +245,6 @@ export function AdminPage() {
     }
     try {
       await api.deleteAdminPlayer(target.playerId);
-      if (selectedPlayerId === target.playerId) setSelectedPlayerId(null);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao excluir jogador');
@@ -340,11 +337,7 @@ export function AdminPage() {
   const showUsersTable = view === 'usuarios' || view === 'online' || view === 'novos-hoje' || view === 'admins';
 
   const playerRows = useMemo(() => {
-    let rows = selectedPlayerId
-      ? filteredPlayers.filter((player) => player.playerId === selectedPlayerId)
-      : filteredPlayers;
-
-    rows = rows.filter((player) =>
+    let rows = filteredPlayers.filter((player) =>
       matchesSearch(
         searchQuery,
         player.displayName,
@@ -376,7 +369,7 @@ export function AdminPage() {
           return 0;
       }
     });
-  }, [filteredPlayers, searchQuery, selectedPlayerId, sortDir, sortKey]);
+  }, [filteredPlayers, searchQuery, sortDir, sortKey]);
 
   const roomRows = useMemo(() => {
     let rows = rooms.filter((room) =>
@@ -614,24 +607,15 @@ export function AdminPage() {
             value={listQuery}
             onChange={setListQuery}
             placeholder={LIST_SEARCH_PLACEHOLDERS[view]}
+            label={
+              view === 'usuarios' || view === 'online' || view === 'novos-hoje' || view === 'admins'
+                ? 'Procurar usuário ou jogador'
+                : 'Filtrar lista'
+            }
           />
 
           {showUsersTable && (
             <>
-              <AdminPlayerSearch
-                onSelect={(player) => {
-                  setSelectedPlayerId(player.playerId);
-                  selectView('usuarios');
-                }}
-              />
-              {selectedPlayerId && (
-                <p className="admin-filter-banner">
-                  Mostrando jogador selecionado.{' '}
-                  <button type="button" className="admin-inline-link" onClick={() => setSelectedPlayerId(null)}>
-                    Ver todos
-                  </button>
-                </p>
-              )}
               <div className="table-wrap">
                 {playerRows.length === 0 ? (
                   <p className="muted empty">Nenhum usuário nesta lista.</p>

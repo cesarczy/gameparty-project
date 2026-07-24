@@ -4,15 +4,17 @@ export function AdminListSearch({
   value,
   onChange,
   placeholder,
+  label = 'Filtrar lista',
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  label?: string;
 }) {
   return (
     <div className="admin-list-search">
       <label className="muted small" htmlFor="admin-list-search">
-        Filtrar lista
+        {label}
       </label>
       <input
         id="admin-list-search"
