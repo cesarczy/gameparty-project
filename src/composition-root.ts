@@ -89,6 +89,7 @@ import { ObterLobbyPorSlugUseCase } from '@live-rooms/application/use-cases/obte
 import { EntrarNaSalaUseCase } from '@live-rooms/application/use-cases/entrar-na-sala.use-case.js';
 import { SairDaSalaUseCase } from '@live-rooms/application/use-cases/sair-da-sala.use-case.js';
 import { EnviarMensagemUseCase } from '@live-rooms/application/use-cases/enviar-mensagem.use-case.js';
+import { RoomMessageCooldown } from '@live-rooms/infrastructure/rate-limit/room-message-cooldown.js';
 import { ObterSalaUseCase } from '@live-rooms/application/use-cases/obter-sala.use-case.js';
 import { ListarMensagensSalaUseCase } from '@live-rooms/application/use-cases/listar-mensagens-sala.use-case.js';
 import { PurgeOldRoomMessagesUseCase } from '@live-rooms/application/use-cases/purge-old-room-messages.use-case.js';
@@ -285,6 +286,8 @@ export async function buildApp(config?: AppConfig): Promise<AppContainer> {
     cadastrarJogo: new CadastrarJogoUseCase(jogoRepo, categoriaRepo, eventBus),
   });
 
+  const roomMessageCooldown = new RoomMessageCooldown();
+
   registerLiveRoomsRoutes(app, {
     listarSalas: new ListarSalasAtivasUseCase(salaRepo),
     obterLobby: new ObterLobbyPorSlugUseCase(jogoRepo, salaRepo),
@@ -292,7 +295,13 @@ export async function buildApp(config?: AppConfig): Promise<AppContainer> {
     listarMensagens: new ListarMensagensSalaUseCase(mensagemRepo),
     entrar: new EntrarNaSalaUseCase(salaRepo, jogadorRepo, eventBus),
     sair: new SairDaSalaUseCase(salaRepo, eventBus),
-    enviarMensagem: new EnviarMensagemUseCase(salaRepo, mensagemRepo, jogadorRepo, eventBus),
+    enviarMensagem: new EnviarMensagemUseCase(
+      salaRepo,
+      mensagemRepo,
+      jogadorRepo,
+      eventBus,
+      roomMessageCooldown,
+    ),
     chatHub,
   });
 

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api, connectRoomSocket, connectPrivateMessageSocket, isSessionInvalidError, type ChatMessage, type RoomInfo } from '../../../shared/api/client';
 import { useAuth } from '../../../app/auth-context';
 import { filterProfanity } from '../../../shared/utils/profanity-filter';
+import { CHAT_MESSAGE_COOLDOWN_MS, CHAT_MESSAGE_MAX_LENGTH } from '../../../shared/constants/chat';
 import { Button, Card, ErrorState, GameCover, Input, Label, PlayerNick, RankBadge, Spinner, BackLink } from '../../../shared/ui';
 import { ReportPlayerModal } from '../../social/components/report-player-modal';
 import { AdminPlayerLogsPanel } from '../../admin/components/admin-activity-logs';
@@ -15,6 +16,7 @@ export function RoomPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [profanityFilter, setProfanityFilter] = useState(true);
   const [content, setContent] = useState('');
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [joined, setJoined] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
@@ -24,6 +26,7 @@ export function RoomPage() {
     joinKeyRef.current = null;
     setJoined(false);
     setError(null);
+    setCooldownSeconds(0);
   }, [roomId]);
 
   useEffect(() => {
@@ -101,13 +104,21 @@ export function RoomPage() {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages]);
 
+  useEffect(() => {
+    if (cooldownSeconds <= 0) return undefined;
+    const timer = window.setInterval(() => {
+      setCooldownSeconds((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [cooldownSeconds]);
+
   function displayContent(text: string) {
     return profanityFilter ? filterProfanity(text) : text;
   }
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() || cooldownSeconds > 0) return;
     setError(null);
     try {
       const msg = await api.sendMessage(roomId, content.trim());
@@ -116,6 +127,7 @@ export function RoomPage() {
         return [...prev, { ...msg, type: 'message' }];
       });
       setContent('');
+      setCooldownSeconds(Math.ceil(CHAT_MESSAGE_COOLDOWN_MS / 1000));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao enviar');
     }
@@ -172,10 +184,17 @@ export function RoomPage() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Digite sua mensagem…"
-            maxLength={2000}
+            maxLength={CHAT_MESSAGE_MAX_LENGTH}
+            disabled={cooldownSeconds > 0}
           />
-          <Button type="submit">Enviar</Button>
+          <Button type="submit" disabled={cooldownSeconds > 0 || !content.trim()}>
+            {cooldownSeconds > 0 ? `Aguarde ${cooldownSeconds}s` : 'Enviar'}
+          </Button>
         </form>
+        <p className="muted small chat-form-hint">
+          Máximo {CHAT_MESSAGE_MAX_LENGTH} caracteres · intervalo de {CHAT_MESSAGE_COOLDOWN_MS / 1000}s entre mensagens
+          {content.length > 0 && ` · ${content.length}/${CHAT_MESSAGE_MAX_LENGTH}`}
+        </p>
       </Card>
     </div>
   );

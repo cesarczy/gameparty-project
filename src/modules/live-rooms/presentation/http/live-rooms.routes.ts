@@ -8,6 +8,7 @@ import { ListarMensagensSalaUseCase } from '../../application/use-cases/listar-m
 import { EntrarNaSalaUseCase } from '../../application/use-cases/entrar-na-sala.use-case.js';
 import { SairDaSalaUseCase } from '../../application/use-cases/sair-da-sala.use-case.js';
 import { EnviarMensagemUseCase } from '../../application/use-cases/enviar-mensagem.use-case.js';
+import { MESSAGE_CONTENT_MAX_LENGTH } from '../../domain/value-objects/message-content.constants.js';
 import type { ChatRoomHub } from '../../infrastructure/messaging/chat-room.hub.js';
 import { requireAuth } from '@shared/presentation/http/auth.hook.js';
 
@@ -77,7 +78,7 @@ export function registerLiveRoomsRoutes(
   app.post('/api/salas/:roomId/mensagens', async (request, reply) => {
     const playerId = requireAuth(request);
     const { roomId } = z.object({ roomId: z.string().uuid() }).parse(request.params);
-    const body = z.object({ content: z.string().min(1).max(2000) }).parse(request.body);
+    const body = z.object({ content: z.string().min(1).max(MESSAGE_CONTENT_MAX_LENGTH) }).parse(request.body);
     const result = await deps.enviarMensagem.execute({
       roomId,
       authorId: playerId,

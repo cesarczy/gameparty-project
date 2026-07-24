@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   api,
@@ -6,8 +6,8 @@ import {
   type AdminGame,
   type AdminPanel,
   type AdminPlayer,
-  type AdminReport,
   type AdminGlobalLogs,
+  type ActivityLogEntry,
   type Category,
 } from '../../../shared/api/client';
 import { useAuth } from '../../../app/auth-context';
@@ -18,7 +18,16 @@ import { AdminGameEditModal } from '../components/admin-game-edit-modal';
 import { AdminCategoryEditModal } from '../components/admin-category-edit-modal';
 import { AdminPlayerSearch } from '../components/admin-player-search';
 import { AdminReportDetailModal, truncateReportDetails } from '../components/admin-report-detail-modal';
-import { AdminGlobalLogsPanel } from '../components/admin-activity-logs';
+import { AdminGlobalLogsPanel, LOG_TYPE_LABELS } from '../components/admin-activity-logs';
+import { AdminListSearch, SortableTh } from '../components/admin-table-tools';
+import {
+  compareNumber,
+  compareText,
+  matchesSearch,
+  normalizeSearchQuery,
+  toggleSortKey,
+  type SortDirection,
+} from '../lib/admin-table-utils';
 import { REPORT_REASONS } from '../../social/components/report-player-modal';
 
 const REASON_LABELS = Object.fromEntries(REPORT_REASONS.map((item) => [item.value, item.label])) as Record<string, string>;
@@ -33,6 +42,18 @@ type AdminView =
   | 'admins'
   | 'categorias'
   | 'logs';
+
+const LIST_SEARCH_PLACEHOLDERS: Record<AdminView, string> = {
+  usuarios: 'Filtrar por nome, usuário, e-mail ou status…',
+  online: 'Filtrar usuários online…',
+  'novos-hoje': 'Filtrar novos usuários…',
+  admins: 'Filtrar administradores…',
+  chats: 'Filtrar por sala, jogo ou participante…',
+  denuncias: 'Filtrar denúncias…',
+  jogos: 'Filtrar jogos…',
+  categorias: 'Filtrar categorias…',
+  logs: 'Filtrar logs…',
+};
 
 const VIEW_TITLES: Record<AdminView, string> = {
   usuarios: 'Todos os usuários',
@@ -64,6 +85,12 @@ function filterPlayers(players: AdminPlayer[], view: AdminView): AdminPlayer[] {
     default:
       return players;
   }
+}
+
+function playerStatusLabel(player: AdminPlayer): string {
+  if (player.isSystemAccount) return 'Conta do sistema';
+  if (player.isBanned) return 'Banido';
+  return player.isOnline ? 'Online' : 'Offline';
 }
 
 function PlayerLink({
@@ -136,6 +163,21 @@ export function AdminPage() {
   const [globalLogs, setGlobalLogs] = useState<AdminGlobalLogs | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [listQuery, setListQuery] = useState('');
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDirection>('asc');
+
+  useEffect(() => {
+    setListQuery('');
+    setSortKey(null);
+    setSortDir('asc');
+  }, [view]);
+
+  function onSort(nextKey: string) {
+    const next = toggleSortKey(sortKey, sortDir, nextKey);
+    setSortKey(next.key);
+    setSortDir(next.dir);
+  }
 
   async function load() {
     setError(null);
@@ -292,6 +334,198 @@ export function AdminPage() {
     }
   }, [view]);
 
+  const filteredPlayers = filterPlayers(players, view);
+  const searchQuery = normalizeSearchQuery(listQuery);
+  const showUsersTable = view === 'usuarios' || view === 'online' || view === 'novos-hoje' || view === 'admins';
+
+  const playerRows = useMemo(() => {
+    let rows = selectedPlayerId
+      ? filteredPlayers.filter((player) => player.playerId === selectedPlayerId)
+      : filteredPlayers;
+
+    rows = rows.filter((player) =>
+      matchesSearch(
+        searchQuery,
+        player.displayName,
+        player.username,
+        player.email,
+        playerStatusLabel(player),
+        player.role,
+        new Date(player.createdAt).toLocaleDateString('pt-BR'),
+      ),
+    );
+
+    if (!sortKey) return rows;
+
+    return [...rows].sort((a, b) => {
+      switch (sortKey) {
+        case 'displayName':
+          return compareText(a.displayName, b.displayName, sortDir);
+        case 'username':
+          return compareText(a.username, b.username, sortDir);
+        case 'email':
+          return compareText(a.email, b.email, sortDir);
+        case 'status':
+          return compareText(playerStatusLabel(a), playerStatusLabel(b), sortDir);
+        case 'role':
+          return compareText(a.role, b.role, sortDir);
+        case 'createdAt':
+          return compareText(a.createdAt, b.createdAt, sortDir);
+        default:
+          return 0;
+      }
+    });
+  }, [filteredPlayers, searchQuery, selectedPlayerId, sortDir, sortKey]);
+
+  const roomRows = useMemo(() => {
+    let rows = rooms.filter((room) =>
+      matchesSearch(
+        searchQuery,
+        room.title,
+        room.gameName,
+        room.gameSlug,
+        room.participantCount,
+        ...room.participants.map((p) => p.displayName),
+      ),
+    );
+    if (!sortKey) return rows;
+    return [...rows].sort((a, b) => {
+      switch (sortKey) {
+        case 'title':
+          return compareText(a.title, b.title, sortDir);
+        case 'gameName':
+          return compareText(a.gameName, b.gameName, sortDir);
+        case 'participants':
+          return compareNumber(a.participantCount, b.participantCount, sortDir);
+        default:
+          return 0;
+      }
+    });
+  }, [rooms, searchQuery, sortDir, sortKey]);
+
+  const reportRows = useMemo(() => {
+    let rows = reports.filter((report) =>
+      matchesSearch(
+        searchQuery,
+        report.reported.displayName,
+        report.reporter.displayName,
+        REASON_LABELS[report.reason] ?? report.reason,
+        report.details,
+        new Date(report.createdAt).toLocaleDateString('pt-BR'),
+      ),
+    );
+    if (!sortKey) return rows;
+    return [...rows].sort((a, b) => {
+      switch (sortKey) {
+        case 'reported':
+          return compareText(a.reported.displayName, b.reported.displayName, sortDir);
+        case 'reporter':
+          return compareText(a.reporter.displayName, b.reporter.displayName, sortDir);
+        case 'reason':
+          return compareText(
+            REASON_LABELS[a.reason] ?? a.reason,
+            REASON_LABELS[b.reason] ?? b.reason,
+            sortDir,
+          );
+        case 'details':
+          return compareText(a.details ?? '', b.details ?? '', sortDir);
+        case 'createdAt':
+          return compareText(a.createdAt, b.createdAt, sortDir);
+        default:
+          return 0;
+      }
+    });
+  }, [reports, searchQuery, sortDir, sortKey]);
+
+  const gameRows = useMemo(() => {
+    let rows = games.filter((game) =>
+      matchesSearch(searchQuery, game.name, game.slug, game.active ? 'Ativo' : 'Inativo'),
+    );
+    if (!sortKey) return rows;
+    return [...rows].sort((a, b) => {
+      switch (sortKey) {
+        case 'name':
+          return compareText(a.name, b.name, sortDir);
+        case 'slug':
+          return compareText(a.slug, b.slug, sortDir);
+        case 'status':
+          return compareText(a.active ? 'Ativo' : 'Inativo', b.active ? 'Ativo' : 'Inativo', sortDir);
+        default:
+          return 0;
+      }
+    });
+  }, [games, searchQuery, sortDir, sortKey]);
+
+  const categoryRows = useMemo(() => {
+    let rows = categories.filter((category) =>
+      matchesSearch(
+        searchQuery,
+        category.name,
+        category.slug,
+        (category.active ?? true) ? 'Ativa' : 'Inativa',
+      ),
+    );
+    if (!sortKey) return rows;
+    return [...rows].sort((a, b) => {
+      const aActive = a.active ?? true;
+      const bActive = b.active ?? true;
+      switch (sortKey) {
+        case 'name':
+          return compareText(a.name, b.name, sortDir);
+        case 'slug':
+          return compareText(a.slug, b.slug, sortDir);
+        case 'status':
+          return compareText(aActive ? 'Ativa' : 'Inativa', bActive ? 'Ativa' : 'Inativa', sortDir);
+        default:
+          return 0;
+      }
+    });
+  }, [categories, searchQuery, sortDir, sortKey]);
+
+  const filteredGlobalLogs = useMemo(() => {
+    if (!globalLogs) return null;
+    const filterEntry = (entry: ActivityLogEntry) =>
+      matchesSearch(
+        searchQuery,
+        LOG_TYPE_LABELS[entry.type] ?? entry.message,
+        entry.message,
+        entry.actorName,
+        entry.type,
+        new Date(entry.createdAt).toLocaleString('pt-BR'),
+      );
+
+    const sortEntries = (entries: ActivityLogEntry[]) => {
+      const copy = entries.filter(filterEntry);
+      if (!sortKey) return copy;
+      return [...copy].sort((a, b) => {
+        switch (sortKey) {
+          case 'message':
+            return compareText(
+              LOG_TYPE_LABELS[a.type] ?? a.message,
+              LOG_TYPE_LABELS[b.type] ?? b.message,
+              sortDir,
+            );
+          case 'actor':
+            return compareText(a.actorName ?? '', b.actorName ?? '', sortDir);
+          case 'createdAt':
+            return compareText(a.createdAt, b.createdAt, sortDir);
+          default:
+            return 0;
+        }
+      });
+    };
+
+    return {
+      grouped: {
+        auth: sortEntries(globalLogs.grouped.auth),
+        profile: sortEntries(globalLogs.grouped.profile),
+        admin: sortEntries(globalLogs.grouped.admin),
+        security: sortEntries(globalLogs.grouped.security),
+      },
+      logs: sortEntries(globalLogs.logs),
+    };
+  }, [globalLogs, searchQuery, sortDir, sortKey]);
+
   if (loading) {
     return (
       <AppLayout>
@@ -299,12 +533,6 @@ export function AdminPage() {
       </AppLayout>
     );
   }
-
-  const filteredPlayers = filterPlayers(players, view);
-  const displayedPlayers = selectedPlayerId
-    ? filteredPlayers.filter((player) => player.playerId === selectedPlayerId)
-    : filteredPlayers;
-  const showUsersTable = view === 'usuarios' || view === 'online' || view === 'novos-hoje' || view === 'admins';
 
   return (
     <AppLayout>
@@ -381,6 +609,12 @@ export function AdminPage() {
         <Card className="table-card">
           <h2>{VIEW_TITLES[view]}</h2>
 
+          <AdminListSearch
+            value={listQuery}
+            onChange={setListQuery}
+            placeholder={LIST_SEARCH_PLACEHOLDERS[view]}
+          />
+
           {showUsersTable && (
             <>
               <AdminPlayerSearch
@@ -398,24 +632,24 @@ export function AdminPage() {
                 </p>
               )}
               <div className="table-wrap">
-                {displayedPlayers.length === 0 ? (
+                {playerRows.length === 0 ? (
                   <p className="muted empty">Nenhum usuário nesta lista.</p>
                 ) : (
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Nome</th>
-                        <th>Usuário</th>
-                        <th>E-mail</th>
-                        <th>Status</th>
+                        <SortableTh label="Nome" active={sortKey === 'displayName'} direction={sortDir} onSort={() => onSort('displayName')} />
+                        <SortableTh label="Usuário" active={sortKey === 'username'} direction={sortDir} onSort={() => onSort('username')} />
+                        <SortableTh label="E-mail" active={sortKey === 'email'} direction={sortDir} onSort={() => onSort('email')} />
+                        <SortableTh label="Status" active={sortKey === 'status'} direction={sortDir} onSort={() => onSort('status')} />
                         <th>Insígnia</th>
-                        <th>Papel</th>
-                        <th>Cadastro</th>
+                        <SortableTh label="Papel" active={sortKey === 'role'} direction={sortDir} onSort={() => onSort('role')} />
+                        <SortableTh label="Cadastro" active={sortKey === 'createdAt'} direction={sortDir} onSort={() => onSort('createdAt')} />
                         <th>Ações</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {displayedPlayers.map((player) => (
+                      {playerRows.map((player) => (
                         <tr key={player.playerId} className={player.isBanned ? 'row-banned' : ''}>
                           <td>
                             <PlayerLink
@@ -484,20 +718,20 @@ export function AdminPage() {
 
           {view === 'chats' && (
             <div className="table-wrap">
-              {rooms.length === 0 ? (
+              {roomRows.length === 0 ? (
                 <p className="muted empty">Nenhum chat ativo no momento.</p>
               ) : (
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Sala</th>
-                      <th>Jogo</th>
-                      <th>Participantes</th>
+                      <SortableTh label="Sala" active={sortKey === 'title'} direction={sortDir} onSort={() => onSort('title')} />
+                      <SortableTh label="Jogo" active={sortKey === 'gameName'} direction={sortDir} onSort={() => onSort('gameName')} />
+                      <SortableTh label="Participantes" active={sortKey === 'participants'} direction={sortDir} onSort={() => onSort('participants')} />
                       <th />
                     </tr>
                   </thead>
                   <tbody>
-                    {rooms.map((room) => (
+                    {roomRows.map((room) => (
                       <tr key={room.roomId}>
                         <td>{room.title}</td>
                         <td>
@@ -531,22 +765,22 @@ export function AdminPage() {
 
           {view === 'denuncias' && (
             <div className="table-wrap">
-              {reports.length === 0 ? (
+              {reportRows.length === 0 ? (
                 <p className="muted empty">Nenhuma denúncia aberta.</p>
               ) : (
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Denunciado</th>
-                      <th>Denunciante</th>
-                      <th>Motivo</th>
-                      <th>Detalhes</th>
-                      <th>Data</th>
+                      <SortableTh label="Denunciado" active={sortKey === 'reported'} direction={sortDir} onSort={() => onSort('reported')} />
+                      <SortableTh label="Denunciante" active={sortKey === 'reporter'} direction={sortDir} onSort={() => onSort('reporter')} />
+                      <SortableTh label="Motivo" active={sortKey === 'reason'} direction={sortDir} onSort={() => onSort('reason')} />
+                      <SortableTh label="Detalhes" active={sortKey === 'details'} direction={sortDir} onSort={() => onSort('details')} />
+                      <SortableTh label="Data" active={sortKey === 'createdAt'} direction={sortDir} onSort={() => onSort('createdAt')} />
                       <th />
                     </tr>
                   </thead>
                   <tbody>
-                    {reports.map((report) => (
+                    {reportRows.map((report) => (
                       <tr key={report.reportId}>
                         <td>
                           <Link to={`/jogadores/${report.reported.playerId}`}>
@@ -590,17 +824,22 @@ export function AdminPage() {
                 <Button type="submit">Adicionar jogo</Button>
               </form>
               <div className="table-wrap">
+                {gameRows.length === 0 ? (
+                  <p className="muted empty">
+                    {games.length === 0 ? 'Nenhum jogo cadastrado.' : 'Nenhum jogo corresponde ao filtro.'}
+                  </p>
+                ) : (
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Jogo</th>
-                      <th>Slug</th>
-                      <th>Status</th>
+                      <SortableTh label="Jogo" active={sortKey === 'name'} direction={sortDir} onSort={() => onSort('name')} />
+                      <SortableTh label="Slug" active={sortKey === 'slug'} direction={sortDir} onSort={() => onSort('slug')} />
+                      <SortableTh label="Status" active={sortKey === 'status'} direction={sortDir} onSort={() => onSort('status')} />
                       <th />
                     </tr>
                   </thead>
                   <tbody>
-                    {games.map((game) => (
+                    {gameRows.map((game) => (
                       <tr key={game.gameId}>
                         <td>{game.name}</td>
                         <td>{game.slug}</td>
@@ -629,6 +868,7 @@ export function AdminPage() {
                     ))}
                   </tbody>
                 </table>
+                )}
               </div>
             </>
           )}
@@ -641,17 +881,22 @@ export function AdminPage() {
                 <Button type="submit">Adicionar categoria</Button>
               </form>
               <div className="table-wrap">
+                {categoryRows.length === 0 ? (
+                  <p className="muted empty">
+                    {categories.length === 0 ? 'Nenhuma categoria cadastrada.' : 'Nenhuma categoria corresponde ao filtro.'}
+                  </p>
+                ) : (
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Categoria</th>
-                      <th>Slug</th>
-                      <th>Status</th>
+                      <SortableTh label="Categoria" active={sortKey === 'name'} direction={sortDir} onSort={() => onSort('name')} />
+                      <SortableTh label="Slug" active={sortKey === 'slug'} direction={sortDir} onSort={() => onSort('slug')} />
+                      <SortableTh label="Status" active={sortKey === 'status'} direction={sortDir} onSort={() => onSort('status')} />
                       <th />
                     </tr>
                   </thead>
                   <tbody>
-                    {categories.map((category) => (
+                    {categoryRows.map((category) => (
                       <tr key={category.categoryId}>
                         <td>{category.name}</td>
                         <td>{category.slug}</td>
@@ -677,12 +922,34 @@ export function AdminPage() {
                     ))}
                   </tbody>
                 </table>
+                )}
               </div>
             </>
           )}
 
-          {view === 'logs' && globalLogs && (
-            <AdminGlobalLogsPanel grouped={globalLogs.grouped} />
+          {view === 'logs' && filteredGlobalLogs && (
+            <>
+              <div className="admin-logs-sort-row" role="group" aria-label="Ordenar logs">
+                {([
+                  ['message', 'Evento'],
+                  ['actor', 'Autor'],
+                  ['createdAt', 'Data'],
+                ] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`sortable-th ${sortKey === key ? 'active' : ''}`}
+                    onClick={() => onSort(key)}
+                  >
+                    <span>{label}</span>
+                    {sortKey === key && (
+                      <span className="sortable-th-indicator" aria-hidden>{sortDir === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <AdminGlobalLogsPanel grouped={filteredGlobalLogs.grouped} />
+            </>
           )}
         </Card>
       </div>

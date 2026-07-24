@@ -1,0 +1,2 @@
+export const CHAT_MESSAGE_MAX_LENGTH = 500;
+export const CHAT_MESSAGE_COOLDOWN_MS = 10_000;

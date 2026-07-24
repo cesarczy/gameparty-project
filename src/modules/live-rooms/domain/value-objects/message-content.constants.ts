@@ -1,0 +1,3 @@
+export const MESSAGE_CONTENT_MAX_LENGTH = 500;
+
+export const ROOM_MESSAGE_COOLDOWN_MS = 10_000;

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, type ActivityLogEntry, type AdminPlayerLogs } from '../../../shared/api/client';
 import { Card, Spinner } from '../../../shared/ui';
 
-const LOG_TYPE_LABELS: Record<string, string> = {
+export const LOG_TYPE_LABELS: Record<string, string> = {
   LOGIN: 'Login realizado',
   LOGOUT: 'Logout',
   LOGIN_FAILED: 'Tentativa de login com senha incorreta',

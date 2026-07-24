@@ -722,6 +722,32 @@ select.input.field-flash {
   text-align: left; padding: .75rem .5rem; border-bottom: 1px solid var(--border);
 }
 .data-table th { color: var(--muted); font-size: .85rem; font-weight: 600; }
+.data-table th .sortable-th {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.sortable-th:hover { color: #c4b5fd; }
+.sortable-th.active { color: #a78bfa; }
+.sortable-th-indicator { font-size: 0.75rem; opacity: 0.9; }
+.admin-list-search { margin: 0 0 1rem; max-width: 28rem; }
+.admin-list-search label { display: block; margin-bottom: 0.35rem; font-size: 0.85rem; color: var(--muted); }
+.admin-logs-sort-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.chat-form-hint { margin: 0.5rem 0 0; font-size: 0.85rem; color: var(--muted); }
 .table-user { display: flex; align-items: center; gap: .65rem; }
 .role-badge {
   display: inline-block; padding: .2rem .55rem; border-radius: 999px;

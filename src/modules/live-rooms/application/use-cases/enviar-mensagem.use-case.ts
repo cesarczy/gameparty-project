@@ -6,6 +6,7 @@ import { Mensagem } from '../../domain/mensagem/mensagem.aggregate.js';
 import { SalaId } from '../../domain/value-objects/sala-id.vo.js';
 import type { MensagemRepository } from '../ports/sala.repository.js';
 import type { SalaRepository } from '../ports/sala.repository.js';
+import type { RoomMessageRateLimit } from '../ports/room-message-rate-limit.port.js';
 
 export interface EnviarMensagemInput {
   roomId: string;
@@ -30,6 +31,7 @@ export class EnviarMensagemUseCase {
     private readonly mensagemRepo: MensagemRepository,
     private readonly jogadorRepo: JogadorRepository,
     private readonly eventBus: EventBus,
+    private readonly messageCooldown: RoomMessageRateLimit,
   ) {}
 
   async execute(input: EnviarMensagemInput): Promise<EnviarMensagemOutput> {
@@ -47,6 +49,8 @@ export class EnviarMensagemUseCase {
       throw new NotFoundError('Jogador', input.authorId);
     }
 
+    this.messageCooldown.assertCanSend(input.roomId, input.authorId);
+
     autor.registrarAtividade();
     await this.jogadorRepo.save(autor);
 
@@ -57,6 +61,7 @@ export class EnviarMensagemUseCase {
     });
 
     await this.mensagemRepo.save(mensagem);
+    this.messageCooldown.record(input.roomId, input.authorId);
     await this.eventBus.publishAll(mensagem.pullDomainEvents());
 
     return {

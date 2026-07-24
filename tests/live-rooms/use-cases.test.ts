@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CriarSalaUseCase } from '../../src/modules/live-rooms/application/use-cases/criar-sala.use-case.js';
 import { EnviarMensagemUseCase } from '../../src/modules/live-rooms/application/use-cases/enviar-mensagem.use-case.js';
+import { RoomMessageCooldown } from '../../src/modules/live-rooms/infrastructure/rate-limit/room-message-cooldown.js';
 import { EntrarNaSalaUseCase } from '../../src/modules/live-rooms/application/use-cases/entrar-na-sala.use-case.js';
 import { ForbiddenError } from '../../src/shared/application/application.error.js';
 import type { SalaRepository } from '../../src/modules/live-rooms/application/ports/sala.repository.js';
@@ -102,7 +103,13 @@ describe('Live-rooms use cases', () => {
       capacity: 5,
     });
 
-    const enviar = new EnviarMensagemUseCase(salaRepo, mensagemRepo, jogadorRepo, eventBus);
+    const enviar = new EnviarMensagemUseCase(
+      salaRepo,
+      mensagemRepo,
+      jogadorRepo,
+      eventBus,
+      new RoomMessageCooldown(),
+    );
     const msg = await enviar.execute({
       roomId: sala.roomId,
       authorId: creatorId,
@@ -132,6 +139,7 @@ describe('Live-rooms use cases', () => {
       new InMemoryMensagemRepository(),
       new InMemoryJogadorRepository(),
       eventBus,
+      new RoomMessageCooldown(),
     );
 
     await expect(

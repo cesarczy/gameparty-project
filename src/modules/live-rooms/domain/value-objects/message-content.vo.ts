@@ -1,6 +1,7 @@
 import { DomainError } from '@shared/domain/domain.error.js';
+import { MESSAGE_CONTENT_MAX_LENGTH } from './message-content.constants.js';
 
-const MAX_LENGTH = 2000;
+const MAX_LENGTH = MESSAGE_CONTENT_MAX_LENGTH;
 
 export class MessageContent {
   private constructor(private readonly value: string) {}
